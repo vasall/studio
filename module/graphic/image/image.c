@@ -1,4 +1,4 @@
-#include <graphic/image.h>
+#include <graphic/image/image.h>
 
 #include <devkit/log/log.h>
 #include <devkit/util/helper.h>

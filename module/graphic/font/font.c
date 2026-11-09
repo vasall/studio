@@ -1,4 +1,4 @@
-#include <graphic/font.h>
+#include <graphic/font/font.h>
 
 #include <devkit/log/log.h>
 

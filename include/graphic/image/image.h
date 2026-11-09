@@ -9,7 +9,7 @@
 #include <shape/circle.h>
 #include <shape/polygon.h>
 
-#include <graphic/color.h>
+#include <graphic/general/color.h>
 
 typedef struct Image {
         s32 width;

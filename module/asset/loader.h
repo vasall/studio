@@ -10,8 +10,8 @@
 #include <devkit/types.h>
 #include <devkit/memory/text.h>
 
-#include <graphic/image.h>
-#include <graphic/font.h>
+#include <graphic/image/image.h>
+#include <graphic/font/font.h>
 
 /******************************************************************************
  *

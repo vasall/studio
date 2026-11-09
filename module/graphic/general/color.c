@@ -1,4 +1,4 @@
-#include <graphic/color.h>
+#include <graphic/general/color.h>
 
 /******************************************************************************
  *

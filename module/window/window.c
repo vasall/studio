@@ -19,10 +19,9 @@
  *
  ******************************************************************************/
 
-PUB s32 win_init(Window *win, AssetCache *assets, Renderer *ren, 
-        const char *title, s32 w, s32 h)
+PUB s32 win_init(Window *win, WindowLinks lnk, const char *title, s32 w, s32 h)
 {
-        SDL_WindowFlags flags = SDL_WINDOW_OPENGL;
+        SDL_WindowFlags flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
 
         if(!(win->sdl_window = SDL_CreateWindow(title, w, h, flags))) {
                 LOG(LOG_ERROR, "Failed to create SDL Window");
@@ -31,20 +30,20 @@ PUB s32 win_init(Window *win, AssetCache *assets, Renderer *ren,
         }
 
         SDL_strlcpy(win->title, title, sizeof(win->title));
+        win->links = lnk;
 
         /* Use the pixel size, which can differ from w/h on HiDPI screens */
         SDL_GetWindowSizeInPixels(win->sdl_window, &win->width, &win->height);
-        glViewport(0, 0, win->width, win->height);
 
-        /* Initialize the UI */
-        if(ui_screen_init(&win->ui, assets, win->width, win->height) < 0) {
+        if(ui_screen_init(&win->ui, lnk.assets, lnk.renderer, win->width,
+                          win->height) < 0) {
                 LOG(LOG_ERROR, "Failed to initialize the UI");
                 goto err_destroy_window;
         }
 
-        /**/
         win->color = fcolor(1, 1, 1, 1);
-        win->renderer = ren;
+        win->scene = NULL;
+        win->camera = NULL;
 
         return 0;
 
@@ -60,6 +59,7 @@ PUB void win_deinit(Window *win)
                 return;
         }
 
+        ui_screen_deinit(&win->ui);
         SDL_DestroyWindow(win->sdl_window);
 }
 
@@ -67,9 +67,13 @@ PUB void win_handle_event(Window *win, SDL_Event *event)
 {
         if(event->type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED &&
            event->window.windowID == SDL_GetWindowID(win->sdl_window)) {
-                /* The viewport is updated in win_begin_frame */
+                /* The viewport is updated in render_begin */
                 win->width = event->window.data1;
                 win->height = event->window.data2;
+
+                if(ui_screen_resize(&win->ui, win->width, win->height) < 0) {
+                        LOG(LOG_ERROR, "Failed to resize the UI");
+                }
         }
 }
 
@@ -79,15 +83,27 @@ PUB void win_set_clear_color(Window *win, IColor col)
 }
 
 
+PUB void win_set_scene(Window *win, Scene *scn, Camera *cam)
+{
+        win->scene = scn;
+        win->camera = cam;
+}
+
 PUB void win_render(Window *win)
 {
-        render_begin(win->renderer, win);
+        Renderer *ren = win->links.renderer;
 
-        /* Render scenes */
+        render_begin(ren, win);
 
-        /* Render UI */
+        if(win->scene && win->camera) {
+                scene_render(win->scene, ren, win->camera,
+                             mkrect(0, 0, win->width, win->height),
+                             win->height);
+        }
 
-        render_end(win->renderer, win);
+        ui_screen_render(&win->ui);
+
+        render_end(ren, win);
 }
 
 /******************************************************************************
@@ -95,4 +111,3 @@ PUB void win_render(Window *win)
  * 				LOCAL FUNCTIONS
  *
  ******************************************************************************/
-
