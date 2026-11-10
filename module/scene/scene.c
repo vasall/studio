@@ -59,6 +59,8 @@ PUB s32 scene_add(Scene *scn, ModelId model, Vector3 position)
         }
 
         obj.model = model;
+        obj.texture.index = -1;
+        obj.texture.generation = 0;
         obj.position = position;
         obj.rotation = quat_identity();
         obj.scale = vec3(1.0, 1.0, 1.0);
@@ -98,6 +100,7 @@ PUB void scene_render(Scene *scn, Renderer *ren, Camera *cam, Rectangle area,
         render_set_depth_test(ren, 1);
         render_set_blend(ren, RENDER_BLEND_NONE);
         render_use_shader(ren, scn->shader);
+        render_set_s32(ren, "u_texture", 0);
 
         view = camera_view_rotation(cam);
         proj = camera_projection(cam, (f64)area.w / (f64)area.h);
@@ -115,6 +118,8 @@ PUB void scene_render(Scene *scn, Renderer *ren, Camera *cam, Rectangle area,
 
                 render_set_mat4(ren, "u_model_view", &mv_f);
                 render_set_mat4(ren, "u_mvp", &mvp_f);
+                render_set_texture(ren, 0, RENDER_ID_VALID(obj->texture) ?
+                                   obj->texture : ren->white);
                 render_draw_model(ren, obj->model);
         }
 

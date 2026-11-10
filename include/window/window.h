@@ -37,10 +37,6 @@ struct Window {
         SDL_Window *sdl_window;
 
         UIScreen ui;
-
-        /* Drawn over the whole window below the UI, if both are set */
-        Scene *scene;
-        Camera *camera;
 };
 
 /*

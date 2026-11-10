@@ -14,9 +14,11 @@
 
 /*
  * Build a cube with side length 1 around the origin. Every side has its own
- * 4 vertices, so each side keeps its own normal and color (hard edges).
+ * 4 vertices, so each side keeps its own normal and color (hard edges). The
+ * uv of each side covers the whole texture. If colored is 0, all sides are
+ * white, so a texture shows unchanged.
  */
-static s32 make_cube(Mesh *mesh)
+static s32 make_cube(Mesh *mesh, s32 colored)
 {
         /* Normal, then the axes along the side's u and v direction */
         static const f32 sides[6][9] = {
@@ -27,9 +29,13 @@ static s32 make_cube(Mesh *mesh)
                 { 0, 0, 1,   1, 0, 0,   0, 1, 0 },
                 { 0, 0,-1,  -1, 0, 0,   0, 1, 0 }
         };
-        static const u8 colors[6][3] = {
-                {230, 80, 70}, {70, 160, 230}, {90, 200, 110},
-                {240, 200, 70}, {200, 110, 220}, {240, 240, 240}
+        static const IColor colors[6] = {
+                {230, 80, 70, 255},
+                {70, 160, 230, 255},
+                {90, 200, 110, 255},
+                {240, 200, 70, 255},
+                {200, 110, 220, 255},
+                {240, 240, 240, 255}
         };
         static const f32 corners[4][2] = {
                 {-0.5f, -0.5f}, {0.5f, -0.5f}, {0.5f, 0.5f}, {-0.5f, 0.5f}
@@ -43,8 +49,7 @@ static s32 make_cube(Mesh *mesh)
 
         for(s = 0; s < 6; s++) {
                 const f32 *n = sides[s];
-                IColor col = icolor(colors[s][0], colors[s][1], colors[s][2],
-                                    255);
+                IColor col = colored ? colors[s] : icolor(255, 255, 255, 255);
                 s32 first = mesh_vertex_count(mesh);
 
                 for(c = 0; c < 4; c++) {
@@ -73,11 +78,11 @@ static s32 make_cube(Mesh *mesh)
  */
 static ShaderId load_scene_shader(AssetCache *assets, Renderer *ren)
 {
-        ShaderId none = { -1, 0 };
-        AssetId vert = asset_load_text(assets, "shader/shader_model.vert");
-        AssetId frag = asset_load_text(assets, "shader/shader_model.frag");
+        ShaderId none = { POOL_HANDLE_NONE };
+        TextId vert = asset_load_text(assets, "shader/shader_model.vert");
+        TextId frag = asset_load_text(assets, "shader/shader_model.frag");
 
-        if(vert < 0 || frag < 0) {
+        if(!ASSET_ID_VALID(vert) || !ASSET_ID_VALID(frag)) {
                 return none;
         }
 
@@ -100,8 +105,12 @@ s32 main(void)
         Camera camera;
         ShaderId scene_shader;
         ModelId cube_model;
+        ModelId tex_cube_model;
+        TextureId missing_tex;
+        ImageId missing_img;
         Mesh cube;
         s32 cube_obj;
+        s32 tex_cube_obj;
         Rectangle panel;
 
         /*
@@ -140,29 +149,51 @@ s32 main(void)
         }
 
         /*
-         * DEMO SCENE: a spinning cube with a panel drawn on the UI canvas
+         * DEMO SCENE: a colored and a textured cube, and a panel drawn on
+         * the UI canvas
          */
 
         scene_shader = load_scene_shader(&app_assets, &app_renderer);
-        if(scene_shader.index < 0) {
+        if(!RENDER_ID_VALID(scene_shader)) {
                 LOG(LOG_ERROR, "Failed to load the scene shader");
                 goto err_win_deinit;
         }
 
-        if(make_cube(&cube) < 0) {
+        if(make_cube(&cube, 1) < 0) {
                 LOG(LOG_ERROR, "Failed to build the cube mesh");
                 goto err_win_deinit;
         }
         cube_model = render_create_model(&app_renderer, &cube);
         mesh_deinit(&cube);
 
+        if(make_cube(&cube, 0) < 0) {
+                LOG(LOG_ERROR, "Failed to build the cube mesh");
+                goto err_win_deinit;
+        }
+        tex_cube_model = render_create_model(&app_renderer, &cube);
+        mesh_deinit(&cube);
+
+        missing_tex.index = -1;
+        missing_tex.generation = 0;
+        missing_img = asset_load_image(&app_assets, "image/arrow.png");
+        if(ASSET_ID_VALID(missing_img)) {
+                Image *img = asset_image(&app_assets, missing_img);
+                missing_tex = render_create_texture(&app_renderer, img->width,
+                                                    img->height, img->pixels);
+        }
+        if(!RENDER_ID_VALID(missing_tex)) {
+                LOG(LOG_WARN, "Failed to load image/arrow.png");
+        }
+
         if(scene_init(&scene, scene_shader) < 0) {
                 goto err_win_deinit;
         }
-        cube_obj = scene_add(&scene, cube_model, vec3(0.0, 0.0, 0.0));
+        cube_obj = scene_add(&scene, cube_model, vec3(-0.9, 0.0, 0.0));
+        tex_cube_obj = scene_add(&scene, tex_cube_model, vec3(0.9, 0.0, 0.0));
+        scene_object(&scene, tex_cube_obj)->texture = missing_tex;
 
         camera_init(&camera);
-        camera.position = vec3(2.0, 1.5, 3.0);
+        camera.position = vec3(1.5, 1.8, 3.8);
         camera_look_at(&camera, vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0));
 
         win_set_scene(&window, &scene, &camera);
@@ -189,6 +220,12 @@ s32 main(void)
                 if((obj = scene_object(&scene, cube_obj))) {
                         f64 t = (f64)SDL_GetTicks() / 1000.0;
                         obj->rotation = quat_euler(t * 0.5, t * 0.8, 0.0);
+                }
+
+                /* The other way round, to see both cubes from all sides */
+                if((obj = scene_object(&scene, tex_cube_obj))) {
+                        f64 t = (f64)SDL_GetTicks() / 1000.0;
+                        obj->rotation = quat_euler(-t * 0.4, -t * 0.6, 0.0);
                 }
 
                 win_render(&window);

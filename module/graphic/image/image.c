@@ -546,6 +546,45 @@ PUB void img_draw_polygon(Image *img, Polygon poly, IColor col, s32 w)
         free(pts);
 }
 
+PUB void img_blend_mask(Image *img, s32 x, s32 y, const u8 *mask, s32 w,
+                s32 h, IColor col)
+{
+        s32 x0;
+        s32 y0;
+        s32 x1;
+        s32 y1;
+        s32 mx;
+        s32 my;
+
+        if(!img || !mask || w < 1 || h < 1) {
+                return;
+        }
+
+        /* Clip to the image; the mask covers x .. x + w - 1 */
+        x0 = MAX(x, 0);
+        y0 = MAX(y, 0);
+        x1 = MIN(x + w, img->width);
+        y1 = MIN(y + h, img->height);
+
+        for(my = y0; my < y1; my++) {
+                const u8 *row = mask + (my - y) * w;
+                s32 out = my * img->width;
+
+                for(mx = x0; mx < x1; mx++) {
+                        u8 cover = row[mx - x];
+                        IColor c = col;
+
+                        if(cover == 0) {
+                                continue;
+                        }
+
+                        /* Rounded col.a * cover / 255 */
+                        c.a = (u8)((col.a * cover + 127) / 255);
+                        s_blend_pixel(img, out + mx, c);
+                }
+        }
+}
+
 /******************************************************************************
  *
  * 				LOCAL FUNCTIONS

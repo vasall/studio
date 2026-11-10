@@ -15,52 +15,32 @@
  ******************************************************************************/
 
 /*
- * The pool holds every GL object of the renderer. A slot is addressed by its
- * index and generation: freeing a slot bumps its generation, so old IDs that
- * still point to the slot stop working instead of reaching the new object.
- * Generation 0 is never used, so a zeroed ID is always invalid.
- */
-
-LOC s32 r_pool_init(RenderPool *pool);
-
-/*
- * Free the pool's memory. This does not delete the GL objects; they are
- * freed together with the GL context.
- */
-LOC void r_pool_deinit(RenderPool *pool);
-
-/*
- * Store an object in a free slot, reusing freed slots first.
+ * Store a GL object in the pool.
  *
- * @param pool Pointer to the pool
- * @param obj The object, with its type set (the generation is ignored)
- * @param gen_out Receives the generation of the slot
+ * @param index Receives the index of the ID
+ * @param gen Receives the generation of the ID
  *
- * @returns The index of the slot, or -1 if an error occurred
+ * @returns 0 on success, -1 if an error occurred
  */
-LOC s32 r_pool_push(RenderPool *pool, RenderObject obj, u32 *gen_out);
+LOC s32 r_add(Renderer *ren, RenderObject *obj, s32 *index, u32 *gen);
 
 /*
- * Free a slot, so the index can be reused. Delete the GL object first.
- *
- * @returns 0 on success, -1 if the slot was already freed
+ * Get the object of an ID if it has the expected type, or NULL.
  */
-LOC s32 r_pool_remove(RenderPool *pool, s32 index, u32 gen);
+LOC RenderObject *r_get(Renderer *ren, s32 index, u32 gen,
+                        RenderObjectType type);
 
 /*
- * Get the object in a slot. Returns NULL if the slot was freed since, or
- * holds an object of another type. The pointer is only valid until the next
- * r_pool_push, since the list may be reallocated.
+ * Remove an object from the pool. Delete the GL object first.
  */
+LOC void r_remove(Renderer *ren, s32 index, u32 gen);
+
 /*
- * Get the shader of an ID, or NULL if the ID is invalid.
+ * Get the object of a typed ID, or NULL if the ID is invalid.
  */
 LOC Shader *r_get_shader(Renderer *ren, ShaderId id);
 LOC Texture *r_get_texture(Renderer *ren, TextureId id);
 LOC Model *r_get_model(Renderer *ren, ModelId id);
-
-LOC RenderObject *r_pool_get(RenderPool *pool, s32 index, u32 gen,
-                             RenderObjectType type);
 
 /******************************************************************************
  *
@@ -72,6 +52,7 @@ LOC RenderObject *r_pool_get(RenderPool *pool, s32 index, u32 gen,
 PUB s32 render_init(Renderer *ren)
 {
         SDL_WindowFlags flags;
+        IColor white;
 
         /* Request an OpenGL 3.3 core context (must be set before creation) */
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -101,7 +82,7 @@ PUB s32 render_init(Renderer *ren)
                 goto err_destroy_gl_context;
         }
 
-        if(r_pool_init(&ren->pool) < 0) {
+        if(pool_init(&ren->pool, sizeof(RenderObject), 32) < 0) {
                 LOG(LOG_ERROR, "Failed initialize render pool");
                 goto err_destroy_gl_context;
         }
@@ -111,6 +92,9 @@ PUB s32 render_init(Renderer *ren)
 
         /* Core profile GL refuses to draw without a bound VAO */
         glGenVertexArrays(1, &ren->empty_vao);
+
+        white = icolor(255, 255, 255, 255);
+        ren->white = render_create_texture(ren, 1, 1, &white);
 
         return 0;
 
@@ -132,14 +116,14 @@ PUB void render_deinit(Renderer *ren)
         }
 
         /* The GL objects die with the context, only free the CPU memory */
-        for(i = 0; i < list_count(&ren->pool.objects); i++) {
-                RenderObject *obj = list_get(&ren->pool.objects, i);
-                if(obj->type == RENDER_OBJECT_SHADER) {
+        for(i = 0; i < pool_slots(&ren->pool); i++) {
+                RenderObject *obj = pool_at(&ren->pool, i, NULL);
+                if(obj && obj->type == RENDER_OBJECT_SHADER) {
                         uniform_cache_deinit(&obj->data.shader.uniforms);
                 }
         }
 
-        r_pool_deinit(&ren->pool);
+        pool_deinit(&ren->pool);
 
         /* Destroying the context also deletes all GL objects in it */
         SDL_GL_DestroyContext(ren->gl_context);
@@ -301,7 +285,7 @@ PUB void render_draw_model(Renderer *ren, ModelId m)
 PUB ShaderId render_create_shader(Renderer *ren, const char *vert,
                                   const char *frag)
 {
-        ShaderId id = { -1, 0 };
+        ShaderId id = { POOL_HANDLE_NONE };
         RenderObject obj;
 
         if(!ren || !vert || !frag) {
@@ -314,9 +298,8 @@ PUB ShaderId render_create_shader(Renderer *ren, const char *vert,
                 return id;
         }
 
-        if((id.index = r_pool_push(&ren->pool, obj, &id.generation)) < 0) {
+        if(r_add(ren, &obj, &id.index, &id.generation) < 0) {
                 shader_deinit(&obj.data.shader);
-                id.generation = 0;
         }
 
         return id;
@@ -324,7 +307,7 @@ PUB ShaderId render_create_shader(Renderer *ren, const char *vert,
 
 PUB void render_destroy_shader(Renderer *ren, ShaderId id)
 {
-        ShaderId none = { -1, 0 };
+        ShaderId none = { POOL_HANDLE_NONE };
         Shader *shader;
 
         if(!(shader = r_get_shader(ren, id))) {
@@ -338,13 +321,13 @@ PUB void render_destroy_shader(Renderer *ren, ShaderId id)
         }
 
         shader_deinit(shader);
-        r_pool_remove(&ren->pool, id.index, id.generation);
+        r_remove(ren, id.index, id.generation);
 }
 
 
 PUB TextureId render_create_texture(Renderer *ren, s32 w, s32 h, IColor *px)
 {
-        TextureId id = { -1, 0 };
+        TextureId id = { POOL_HANDLE_NONE };
         RenderObject obj;
 
         if(!ren) {
@@ -357,9 +340,8 @@ PUB TextureId render_create_texture(Renderer *ren, s32 w, s32 h, IColor *px)
                 return id;
         }
 
-        if((id.index = r_pool_push(&ren->pool, obj, &id.generation)) < 0) {
+        if(r_add(ren, &obj, &id.index, &id.generation) < 0) {
                 texture_deinit(&obj.data.texture);
-                id.generation = 0;
         }
 
         return id;
@@ -387,12 +369,12 @@ PUB void render_destroy_texture(Renderer *ren, TextureId id)
         }
 
         texture_deinit(texture);
-        r_pool_remove(&ren->pool, id.index, id.generation);
+        r_remove(ren, id.index, id.generation);
 }
 
 PUB ModelId render_create_model(Renderer *ren, Mesh *mesh)
 {
-        ModelId id = { -1, 0 };
+        ModelId id = { POOL_HANDLE_NONE };
         RenderObject obj;
 
         if(!ren) {
@@ -405,9 +387,8 @@ PUB ModelId render_create_model(Renderer *ren, Mesh *mesh)
                 return id;
         }
 
-        if((id.index = r_pool_push(&ren->pool, obj, &id.generation)) < 0) {
+        if(r_add(ren, &obj, &id.index, &id.generation) < 0) {
                 model_deinit(&obj.data.model);
-                id.generation = 0;
         }
 
         return id;
@@ -434,7 +415,7 @@ PUB void render_destroy_model(Renderer *ren, ModelId id)
         }
 
         model_deinit(model);
-        r_pool_remove(&ren->pool, id.index, id.generation);
+        r_remove(ren, id.index, id.generation);
 }
 
 /******************************************************************************
@@ -443,99 +424,25 @@ PUB void render_destroy_model(Renderer *ren, ModelId id)
  *
  ******************************************************************************/
 
-LOC s32 r_pool_init(RenderPool *pool)
+LOC s32 r_add(Renderer *ren, RenderObject *obj, s32 *index, u32 *gen)
 {
-        if(list_init(&pool->objects, sizeof(RenderObject), 32) < 0) {
-                LOG(LOG_ERROR, "Failed to create the render object list");
+        PoolHandle h;
+
+        if(!pool_add(&ren->pool, obj, &h)) {
+                LOG(LOG_ERROR, "Failed to add render object");
+                *index = -1;
+                *gen = 0;
                 return -1;
         }
 
-        if(stack_init(&pool->free_slots, sizeof(s32), 12) < 0) {
-                LOG(LOG_ERROR, "Failed to create stack for free slots");
-                list_deinit(&pool->objects);
-                return -1;
-        }
+        *index = h.index;
+        *gen = h.generation;
 
         return 0;
 }
 
-LOC void r_pool_deinit(RenderPool *pool)
-{
-        stack_deinit(&pool->free_slots);
-        list_deinit(&pool->objects);
-}
-
-LOC s32 r_pool_push(RenderPool *pool, RenderObject obj, u32 *gen_out)
-{
-        RenderObject *slot;
-        s32 index;
-
-        /* Reuse a freed slot, it keeps the generation it got when freed */
-        if(stack_count(&pool->free_slots) > 0) {
-                stack_pop(&pool->free_slots, 1, &index);
-                slot = list_get(&pool->objects, index);
-                obj.generation = slot->generation;
-                *slot = obj;
-        }
-        else {
-                index = list_count(&pool->objects);
-                obj.generation = 1;
-                if(list_push(&pool->objects, 1, &obj) < 0) {
-                        LOG(LOG_ERROR, "Failed to add render object");
-                        return -1;
-                }
-        }
-
-        *gen_out = obj.generation;
-        return index;
-}
-
-LOC s32 r_pool_remove(RenderPool *pool, s32 index, u32 gen)
-{
-        RenderObject *obj;
-
-        if(index < 0 || index >= list_count(&pool->objects)) {
-                return -1;
-        }
-
-        obj = list_get(&pool->objects, index);
-        if(obj->generation != gen || obj->type == RENDER_OBJECT_NONE) {
-                return -1;
-        }
-
-        if(stack_push(&pool->free_slots, 1, &index) < 0) {
-                LOG(LOG_ERROR, "Failed to free render object slot");
-                return -1;
-        }
-
-        obj->type = RENDER_OBJECT_NONE;
-
-        /* Skip 0 on overflow, so a zeroed ID never becomes valid */
-        if(++obj->generation == 0) {
-                obj->generation = 1;
-        }
-
-        return 0;
-}
-
-LOC RenderObject *r_pool_get(RenderPool *pool, s32 index, u32 gen,
-                             RenderObjectType type)
-{
-        RenderObject *obj;
-
-        if(index < 0 || index >= list_count(&pool->objects)) {
-                return NULL;
-        }
-
-        obj = list_get(&pool->objects, index);
-        if(obj->generation != gen || obj->type != type) {
-                return NULL;
-        }
-
-        return obj;
-}
-
-LOC Shader *r_get_shader(Renderer *ren, ShaderId id)
+LOC RenderObject *r_get(Renderer *ren, s32 index, u32 gen,
+                        RenderObjectType type)
 {
         RenderObject *obj;
 
@@ -543,36 +450,36 @@ LOC Shader *r_get_shader(Renderer *ren, ShaderId id)
                 return NULL;
         }
 
-        obj = r_pool_get(&ren->pool, id.index, id.generation,
-                         RENDER_OBJECT_SHADER);
+        obj = pool_get(&ren->pool, pool_handle(index, gen));
+
+        return obj && obj->type == type ? obj : NULL;
+}
+
+LOC void r_remove(Renderer *ren, s32 index, u32 gen)
+{
+        pool_remove(&ren->pool, pool_handle(index, gen));
+}
+
+LOC Shader *r_get_shader(Renderer *ren, ShaderId id)
+{
+        RenderObject *obj = r_get(ren, id.index, id.generation,
+                                  RENDER_OBJECT_SHADER);
 
         return obj ? &obj->data.shader : NULL;
 }
 
 LOC Texture *r_get_texture(Renderer *ren, TextureId id)
 {
-        RenderObject *obj;
-
-        if(!ren) {
-                return NULL;
-        }
-
-        obj = r_pool_get(&ren->pool, id.index, id.generation,
-                         RENDER_OBJECT_TEXTURE);
+        RenderObject *obj = r_get(ren, id.index, id.generation,
+                                  RENDER_OBJECT_TEXTURE);
 
         return obj ? &obj->data.texture : NULL;
 }
 
 LOC Model *r_get_model(Renderer *ren, ModelId id)
 {
-        RenderObject *obj;
-
-        if(!ren) {
-                return NULL;
-        }
-
-        obj = r_pool_get(&ren->pool, id.index, id.generation,
-                         RENDER_OBJECT_MODEL);
+        RenderObject *obj = r_get(ren, id.index, id.generation,
+                                  RENDER_OBJECT_MODEL);
 
         return obj ? &obj->data.model : NULL;
 }

@@ -6,8 +6,7 @@ typedef struct Renderer Renderer;
 #include <devkit/scope.h>
 #include <devkit/types.h>
 
-#include <devkit/memory/list.h>
-#include <devkit/memory/stack.h>
+#include <devkit/memory/pool.h>
 
 #include <devkit/math/vector.h>
 #include <devkit/math/matrix.h>
@@ -36,7 +35,6 @@ typedef enum RenderObjectType {
 
 typedef struct RenderObject {
         RenderObjectType type;
-        u32 generation;
 
         union {
                 Shader shader;
@@ -51,27 +49,34 @@ typedef enum RenderBlend {
         RENDER_BLEND_PREMULTIPLIED      /* "Over" with premultiplied alpha */
 } RenderBlend;
 
-typedef struct RenderPool {
-        List objects;   /* List of Render Objects */
-        Stack free_slots;     /* free slots, for any type*/
-} RenderPool;
-
 /* Separate ID types, so the compiler still catches mix-ups */
 typedef struct ShaderId { s32 index; u32 generation; } ShaderId;
 typedef struct TextureId { s32 index; u32 generation; } TextureId;
 typedef struct ModelId { s32 index; u32 generation; } ModelId;
 
+/*
+ * Check if a ShaderId, TextureId or ModelId was created successfully. A
+ * failed create returns index -1, and a zeroed ID has generation 0, which is
+ * never used. This doesn't tell if the object was destroyed since; the
+ * render functions check that themselves and ignore old IDs.
+ */
+#define RENDER_ID_VALID(id) POOL_HANDLE_VALID(id)
+
 struct Renderer {
         SDL_Window *hidden;
         SDL_GLContext gl_context;
 
-        RenderPool pool;
+        /* Every GL object, as RenderObject; IDs are handles into it */
+        Pool pool;
 
         /* The shader set with render_use_shader, uniforms are sent to it */
         ShaderId shader;
 
         /* Bound for draws that make their vertices in the shader */
         GLuint empty_vao;
+
+        /* A 1x1 white texture, for shaders that need one when there's none */
+        TextureId white;
 };
 
 /*

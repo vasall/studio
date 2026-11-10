@@ -22,6 +22,7 @@
 PUB s32 win_init(Window *win, WindowLinks lnk, const char *title, s32 w, s32 h)
 {
         SDL_WindowFlags flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
+        UIScreenLinks ui_links;
 
         if(!(win->sdl_window = SDL_CreateWindow(title, w, h, flags))) {
                 LOG(LOG_ERROR, "Failed to create SDL Window");
@@ -35,15 +36,14 @@ PUB s32 win_init(Window *win, WindowLinks lnk, const char *title, s32 w, s32 h)
         /* Use the pixel size, which can differ from w/h on HiDPI screens */
         SDL_GetWindowSizeInPixels(win->sdl_window, &win->width, &win->height);
 
-        if(ui_screen_init(&win->ui, lnk.assets, lnk.renderer, win->width,
-                          win->height) < 0) {
+        ui_links.assets = lnk.assets;
+        ui_links.renderer = lnk.renderer;
+        if(ui_screen_init(&win->ui, ui_links, win->width, win->height) < 0) {
                 LOG(LOG_ERROR, "Failed to initialize the UI");
                 goto err_destroy_window;
         }
 
         win->color = fcolor(1, 1, 1, 1);
-        win->scene = NULL;
-        win->camera = NULL;
 
         return 0;
 
@@ -82,24 +82,11 @@ PUB void win_set_clear_color(Window *win, IColor col)
         win->color = fcolor_from_u8(col);
 }
 
-
-PUB void win_set_scene(Window *win, Scene *scn, Camera *cam)
-{
-        win->scene = scn;
-        win->camera = cam;
-}
-
 PUB void win_render(Window *win)
 {
         Renderer *ren = win->links.renderer;
 
         render_begin(ren, win);
-
-        if(win->scene && win->camera) {
-                scene_render(win->scene, ren, win->camera,
-                             mkrect(0, 0, win->width, win->height),
-                             win->height);
-        }
 
         ui_screen_render(&win->ui);
 

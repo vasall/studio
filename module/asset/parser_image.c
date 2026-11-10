@@ -1,11 +1,9 @@
-#include "loader.h"
+#include <asset/parser.h>
 
 #include <devkit/log/log.h>
 
-#include <stdlib.h>
-
 /*
- * stb_image is compiled here and only here. Files are read with load_file,
+ * stb_image is compiled here and only here. Files are read by the loader,
  * so its own file functions aren't needed. Images larger than this are
  * rejected, which also keeps width * height far away from overflowing.
  */
@@ -23,36 +21,28 @@
 
 /******************************************************************************
  *
- * 				PRIVATE FUNCTIONS
+ * 				PUBLIC FUNCTIONS
  *
  ******************************************************************************/
 
-PRV s32 load_image(const char *path, Image *img)
+PUB s32 parse_image(const u8 *data, s32 size, Image *img)
 {
-        u8 *file;
-        s32 file_size;
         u8 *pixels;
         int w;
         int h;
         int channels;
         s64 i;
 
-        if(!path || !img) {
+        if(!data || size < 1 || !img) {
                 LOG(LOG_ERROR, "Invalid parameter(s)");
                 return -1;
         }
 
-        if(load_file(path, &file, &file_size) < 0) {
-                return -1;
-        }
-
         /* Always ask for 4 channels (RGBA), whatever the file contains */
-        pixels = stbi_load_from_memory(file, file_size, &w, &h, &channels, 4);
-        free(file);
-
+        pixels = stbi_load_from_memory(data, size, &w, &h, &channels, 4);
         if(!pixels) {
-                LOG_SS(LOG_ERROR, "Failed to decode image %s: %s",
-                                (char *)path, (char *)stbi_failure_reason());
+                LOG_S(LOG_ERROR, "Failed to decode image: %s",
+                                (char *)stbi_failure_reason());
                 return -1;
         }
 

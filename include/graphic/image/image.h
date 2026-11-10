@@ -145,4 +145,20 @@ PUB void img_fill_polygon(Image *img, Polygon poly, IColor col);
 PUB void img_draw_polygon(Image *img, Polygon poly, IColor col, s32 w);
 
 
+/*
+ * Blend a color through a coverage mask, e.g. a rasterized glyph. Each mask
+ * value (0 = nothing, 255 = full) scales the color's alpha. The mask is
+ * clipped to the image.
+ *
+ * @param img Pointer to the image
+ * @param x The x position of the mask's top left corner
+ * @param y The y position of the mask's top left corner
+ * @param mask w * h bytes, row by row from the top
+ * @param w The width of the mask
+ * @param h The height of the mask
+ * @param col The color, with straight alpha
+*/
+PUB void img_blend_mask(Image *img, s32 x, s32 y, const u8 *mask, s32 w,
+                s32 h, IColor col);
+
 #endif /* VASALL_IMAGE_H */

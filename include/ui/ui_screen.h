@@ -9,14 +9,18 @@
 #include <render/renderer.h>
 #include <shape/rectangle.h>
 
+typedef struct UIScreenLinks {
+        AssetCache *assets;
+        Renderer *renderer;
+} UIScreenLinks;
+
 /*
  * The UI of one window. Everything is drawn on the CPU into the canvas, which
  * is then uploaded and drawn over the window. The canvas is transparent where
  * nothing is drawn, so a 3D scene rendered before shows through.
  */
 typedef struct UIScreen {
-        AssetCache *assets;
-        Renderer *renderer;
+        UIScreenLinks links;
 
         s32 width;
         s32 height;
@@ -37,8 +41,7 @@ typedef struct UIScreen {
  *
  * @returns 0 on success, -1 if an error occurred
  */
-PUB s32 ui_screen_init(UIScreen *screen, AssetCache *cache, Renderer *ren,
-                       s32 w, s32 h);
+PUB s32 ui_screen_init(UIScreen *screen, UIScreenLinks links, s32 w, s32 h);
 
 /*
  * Free the canvas, its texture and the shader.

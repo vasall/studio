@@ -19,6 +19,7 @@
  */
 typedef struct SceneObject {
         ModelId model;
+        TextureId texture;      /* Invalid to draw without a texture */
 
         Vector3 position;
         Quaternion rotation;
@@ -30,6 +31,7 @@ typedef struct SceneObject {
  *
  *   uniform mat4 u_mvp;         model -> clip space
  *   uniform mat4 u_model_view;  model -> camera space, for lighting
+ *   uniform sampler2D u_texture; the object's texture, white if it has none
  */
 typedef struct Scene {
         List objects;           /* List of SceneObject */
@@ -51,7 +53,8 @@ PUB s32 scene_init(Scene *scn, ShaderId shader);
 PUB void scene_deinit(Scene *scn);
 
 /*
- * Add a model at a position, without rotation and with scale 1.
+ * Add a model at a position, without rotation, with scale 1 and without a
+ * texture.
  *
  * @returns The index of the object, or -1 if an error occurred
  */
