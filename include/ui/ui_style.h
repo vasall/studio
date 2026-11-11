@@ -1,4 +1,0 @@
-#ifndef VASALL_UI_STYLE_H
-#define VASALL_UI_STYLE_H
-
-#endif /* VASALL_UI_STYLE_H */

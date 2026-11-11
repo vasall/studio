@@ -1,0 +1,358 @@
+# Vasall Studio - IBM Carbon, Gray 100 theme
+#
+# Colors are the Carbon Design System v11 "g100" tokens; the variable names
+# follow the Carbon token names (https://carbondesignsystem.com/elements/color/tokens/).
+#
+#   $name                = value          variable, use as $name
+#   class.field          = value          base style of a class
+#   class:state.field    = value          hover, pressed, focused, selected, disabled
+#
+# "a.b" is a variant of "a": it gets all of a's fields first.
+# Sizes: fit | 22 | 22px | 50% | grow | grow 2
+# Sides (margin, padding): all | vertical horizontal | top right bottom left
+# Corners (corner-radius): all | top-left top-right bottom-right bottom-left
+
+# --- Carbon palette ----------------------------------------------------------
+
+$gray-10             = #f4f4f4
+$gray-30             = #c6c6c6
+$gray-40             = #a8a8a8
+$gray-50             = #8d8d8d
+$gray-60             = #6f6f6f
+$gray-70             = #525252
+$gray-80             = #393939
+$gray-90             = #262626
+$gray-100            = #161616
+$blue-40             = #78a9ff
+$blue-50             = #4589ff
+$blue-60             = #0f62fe
+$blue-80             = #002d9c
+$yellow-30           = #f1c21b
+
+# --- Carbon g100 tokens ------------------------------------------------------
+
+$background          = $gray-100
+$background-inverse  = $gray-10
+$background-brand    = $blue-60
+
+$layer-01            = $gray-90
+$layer-02            = $gray-80
+$layer-hover-01      = #333333
+$layer-hover-02      = #474747
+$layer-active-01     = $gray-70
+$layer-selected-01   = $gray-80
+
+$border-subtle-00    = $gray-80
+$border-subtle-01    = $gray-70
+$border-strong-01    = $gray-60
+$border-interactive  = $blue-50
+
+$text-primary        = $gray-10
+$text-secondary      = $gray-30
+$text-helper         = $gray-40
+$text-placeholder    = $gray-60
+$text-inverse        = $gray-100
+$text-on-color       = #ffffff
+
+$icon-primary        = $gray-10
+$icon-secondary      = $gray-30
+
+$link-primary        = $blue-40
+$interactive         = $blue-50
+$focus               = #ffffff
+
+$button-primary         = $blue-60
+$button-primary-hover   = #0050e6
+$button-primary-active  = $blue-80
+
+$highlight           = $blue-80
+$support-warning     = $yellow-30
+
+# Translucent versions, for overlays on any layer
+$background-hover    = #8d8d8d29
+$background-active   = #8d8d8d66
+$interactive-soft    = #4589ff33
+$scroll-thumb        = #6f6f6f99
+$scroll-thumb-hover  = #8d8d8dcc
+
+# --- basics ------------------------------------------------------------------
+
+label.text-color          = $text-primary
+icon.text-color           = $icon-primary
+
+button.height             = 26
+button.padding            = 0 12
+button.corner-radius      = 2
+button.infill             = $button-primary
+button.text-color         = $text-on-color
+button.align-y            = center
+button:hover.infill       = $button-primary-hover
+button:pressed.infill     = $button-primary-active
+
+icon-button.width         = 22
+icon-button.height        = 22
+icon-button.corner-radius = 5
+icon-button.align-x       = center
+icon-button.align-y       = center
+icon-button.text-color    = $icon-secondary
+icon-button:hover.infill  = $background-hover
+icon-button:hover.text-color = $icon-primary
+icon-button:pressed.infill = $background-active
+
+# Carbon tooltips are inverted: light on dark themes
+tooltip.padding           = 4 8
+tooltip.infill            = $background-inverse
+tooltip.corner-radius     = 2
+tooltip.font-size         = 12
+tooltip.text-color        = $text-inverse
+
+scrollbar-thumb.infill        = $scroll-thumb
+scrollbar-thumb:hover.infill  = $scroll-thumb-hover
+scrollbar-thumb:pressed.infill = $gray-40
+
+splitter-line.infill          = $border-subtle-00
+splitter-line:selected.infill = $border-interactive
+
+workbench.infill          = $background
+
+# --- menu bar and menus ------------------------------------------------------
+
+menubar.height            = 32
+menubar.infill            = $background
+menubar.padding           = 0 4
+menubar.align-y           = center
+menubar.gap               = 1
+
+menubar-logo.text-color   = $interactive
+menubar-logo.margin       = 0 6 0 6
+
+menubar-item.height       = 24
+menubar-item.padding      = 0 8
+menubar-item.corner-radius = 4
+menubar-item.align-y      = center
+menubar-item.text-color   = $text-secondary
+menubar-item:hover.infill = $layer-hover-01
+menubar-item:hover.text-color = $text-primary
+menubar-item:selected.infill = $layer-selected-01
+menubar-item:selected.text-color = $text-primary
+
+menubar-title.text-color  = $text-helper
+menubar-title.font-size   = 12
+
+menu.layout               = column
+menu.padding              = 4
+menu.infill               = $layer-01
+menu.border-width         = 1
+menu.border-color         = $border-subtle-01
+menu.corner-radius        = 5
+menu.width                = fit
+
+menu-item.width           = grow
+menu-item.height          = 26
+menu-item.padding         = 0 12 0 12
+menu-item.align-y         = center
+menu-item.gap             = 32
+menu-item.corner-radius   = 3
+menu-item:hover.infill    = $layer-hover-01
+
+menu-item-label.text-color    = $text-primary
+menu-item-shortcut.text-color = $text-helper
+
+menu-separator.width      = grow
+menu-separator.height     = 1
+menu-separator.margin     = 4 8
+menu-separator.infill     = $border-subtle-01
+
+# --- activity bar and side bar -----------------------------------------------
+
+activitybar.width         = 48
+activitybar.infill        = $background
+activitybar.padding       = 4 0
+
+activity-item.width       = 48
+activity-item.height      = 48
+activity-item.align-x     = center
+activity-item.align-y     = center
+activity-item.text-color  = $text-placeholder
+activity-item:hover.text-color    = $icon-secondary
+activity-item:selected.text-color = $icon-primary
+
+sidebar.infill            = $layer-01
+
+sidebar-header.height     = 35
+sidebar-header.padding    = 0 8 0 20
+sidebar-header.align-y    = center
+
+sidebar-title.font        = ui-medium
+sidebar-title.font-size   = 11
+sidebar-title.text-color  = $text-secondary
+
+placeholder.layout        = column
+placeholder.align-x       = center
+placeholder.align-y       = center
+placeholder.padding       = 16
+placeholder-text.text-color = $text-placeholder
+
+# --- editor area -------------------------------------------------------------
+
+editor-area.infill        = $background
+dock-split.infill         = $background
+editor-group.infill       = $background
+
+tab-bar.height            = 35
+tab-bar.infill            = $layer-01
+tab-bar.align-y           = center
+
+tab-scroll.height         = grow
+tab-scroll.width          = grow
+tab-scroll.layout         = row
+
+tab-bar-fill.height       = grow
+
+tab-scroll-thumb.height        = 3
+tab-scroll-thumb.width         = 3
+tab-scroll-thumb.infill        = $scroll-thumb
+tab-scroll-thumb:hover.infill  = $scroll-thumb-hover
+tab-scroll-thumb:pressed.infill = $gray-40
+
+# Carbon "contained" tabs: the selected one takes the page color
+tab.height                = 35
+tab.infill                = $layer-01
+tab.text-color            = $text-secondary
+tab:hover.infill          = $layer-hover-01
+tab:selected.infill       = $background
+
+tab.inactive:selected.infill = $background
+
+tab-row.padding           = 0 6 0 12
+tab-row.gap               = 6
+tab-row.align-y           = center
+
+tab-icon.text-color       = $link-primary
+
+tab-label.text-color          = $text-secondary
+tab-label.selected.text-color = $text-primary
+
+tab-close.width           = 20
+tab-close.height          = 20
+tab-close.corner-radius   = 4
+tab-close.align-x         = center
+tab-close.align-y         = center
+tab-close.text-color      = $icon-secondary
+tab-close:hover.infill    = $background-hover
+
+tab-accent.height         = 2
+tab-accent.infill         = $border-interactive
+
+tab-actions.height        = 35
+tab-actions.padding       = 0 8 0 4
+tab-actions.gap           = 2
+tab-actions.align-y       = center
+
+editor-content.infill     = $background
+
+dock-sash.infill          = none
+
+empty-editor.width        = grow
+empty-editor.height       = grow
+empty-editor.layout       = column
+empty-editor.align-x      = center
+empty-editor.align-y      = center
+empty-editor.gap          = 8
+
+empty-editor-title.font       = ui-bold
+empty-editor-title.font-size  = 28
+empty-editor-title.text-color = $layer-02
+empty-editor-title.margin     = 0 0 16 0
+
+empty-editor-hint.font        = code
+empty-editor-hint.font-size   = 12
+empty-editor-hint.text-color  = $text-placeholder
+
+drop-zone.infill          = $interactive-soft
+drop-zone.border-width    = 1
+drop-zone.border-color    = $border-interactive
+drop-insert.infill        = $border-interactive
+
+drag-preview.padding      = 5 10
+drag-preview.gap          = 6
+drag-preview.infill       = $layer-02
+drag-preview.border-width = 1
+drag-preview.border-color = $border-interactive
+drag-preview.corner-radius = 4
+drag-preview.text-color   = $text-primary
+
+# --- dummy view --------------------------------------------------------------
+
+dummy-stripe.width        = grow
+dummy-stripe.height       = 3
+
+dummy-center.width        = grow
+dummy-center.height       = grow
+dummy-center.align-x      = center
+dummy-center.align-y      = center
+
+dummy-card.layout         = column
+dummy-card.align-x        = center
+dummy-card.gap            = 6
+dummy-card.padding        = 24 36
+dummy-card.border-width   = 1
+dummy-card.corner-radius  = 8
+dummy-card.infill         = $layer-01
+
+dummy-title.font          = ui-bold
+dummy-title.font-size     = 22
+dummy-title.text-color    = $text-primary
+dummy-text.text-color     = $text-secondary
+dummy-hint.font-size      = 12
+dummy-hint.text-color     = $text-helper
+dummy-hint.margin         = 8 0 0 0
+
+# --- panel -------------------------------------------------------------------
+
+panel.infill              = $layer-01
+
+panel-header.height       = 35
+panel-header.padding      = 0 8 0 12
+panel-header.gap          = 4
+panel-header.align-y      = center
+
+panel-tab.height          = 35
+panel-tab.padding         = 0 8
+panel-tab.align-y         = center
+panel-tab.font-size       = 11
+panel-tab.text-color      = $text-helper
+panel-tab:hover.text-color    = $text-secondary
+panel-tab:selected.text-color = $text-primary
+
+# --- status bar --------------------------------------------------------------
+
+statusbar.height          = 22
+statusbar.infill          = $background-brand
+statusbar.padding         = 0 6
+statusbar.align-y         = center
+statusbar.gap             = 2
+
+status-item.height        = 22
+status-item.padding       = 0 6
+status-item.gap           = 4
+status-item.align-y       = center
+status-item.font-size     = 12
+status-item.text-color    = $text-on-color
+status-item:hover.infill  = $button-primary-hover
+
+status-text.padding       = 0 6
+status-text.font-size     = 12
+status-text.text-color    = $text-on-color
+
+# --- debug overlay -----------------------------------------------------------
+
+debug-panel.padding       = 8 10
+debug-panel.gap           = 2
+debug-panel.infill        = #000000d0
+debug-panel.border-width  = 1
+debug-panel.border-color  = $support-warning
+debug-panel.corner-radius = 4
+debug-text.font           = code
+debug-text.font-size      = 11
+debug-text.text-color     = $support-warning
