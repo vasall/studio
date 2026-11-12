@@ -41,11 +41,16 @@ typedef struct Draw2DVertex {
         u8 border_color[4];
 } Draw2DVertex;
 
+/* Quads with one texture and clip, or one callback */
 typedef struct Draw2DBatch {
         GLuint texture;
         s32 clip[4]; /* Scissor x, y, w, h in framebuffer pixels */
         s32 first;   /* First quad */
         s32 count;   /* Number of quads */
+
+        UIDrawCallbackFn callback; /* Set for a callback batch */
+        void *data;
+        s32 rect[4]; /* Viewport of the callback, framebuffer pixels */
 } Draw2DBatch;
 
 typedef struct Quad {
@@ -63,6 +68,9 @@ LOC void s_rect_cmd(Draw2D *d, const UIDrawCmd *cmd, f32 s, const s32 clip[4]);
 LOC void s_text_cmd(Draw2D *d, const UIDrawCmd *cmd, f32 s, const s32 clip[4]);
 LOC void s_icon_cmd(Draw2D *d, const UIDrawCmd *cmd, f32 s, const s32 clip[4]);
 LOC void s_image_cmd(Draw2D *d, const UIDrawCmd *cmd, f32 s, const s32 clip[4]);
+LOC void s_callback_cmd(Draw2D *d, const UIDrawCmd *cmd, f32 s,
+                const s32 clip[4]);
+LOC void s_bind_state(Draw2D *d, s32 fb_w, s32 fb_h);
 LOC void s_ensure_indices(Draw2D *d, s32 quads);
 LOC void s_setup_vao(Draw2D *d);
 
@@ -169,40 +177,59 @@ PUB void draw2d_render(Draw2D *d, List *cmds, f32 scale, s32 fb_w, s32 fb_h)
                 case UI_DRAW_IMAGE:
                         s_image_cmd(d, cmd, scale, clip);
                         break;
+                case UI_DRAW_CALLBACK:
+                        s_callback_cmd(d, cmd, scale, clip);
+                        break;
                 }
         }
 
         d->quads = list_count(&d->verts) / 4;
         d->draw_calls = 0;
-        if(d->quads == 0) return;
+        if(list_count(&d->batches) == 0) return;
 
-        s_ensure_indices(d, d->quads);
-
-        glUseProgram(d->program);
-        glUniform2f(d->u_screen, (f32)fb_w, (f32)fb_h);
-        glUniform1i(d->u_tex, 0);
-        glActiveTexture(GL_TEXTURE0);
-
-        glBindVertexArray(d->vao);
-        glBindBuffer(GL_ARRAY_BUFFER, d->vbo);
-        /* Orphan the old buffer so the driver doesn't wait for the GPU */
-        glBufferData(GL_ARRAY_BUFFER,
-                     (GLsizeiptr)list_count(&d->verts) *
-                             (GLsizeiptr)sizeof(Draw2DVertex),
-                     NULL, GL_STREAM_DRAW);
-        glBufferSubData(GL_ARRAY_BUFFER, 0,
-                        (GLsizeiptr)list_count(&d->verts) *
-                                (GLsizeiptr)sizeof(Draw2DVertex),
-                        list_get(&d->verts, 0));
-
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-        glEnable(GL_SCISSOR_TEST);
+        if(d->quads > 0) {
+                s_ensure_indices(d, d->quads);
+                glBindBuffer(GL_ARRAY_BUFFER, d->vbo);
+                /* Orphan the old buffer so the driver doesn't wait for the
+                   GPU */
+                glBufferData(GL_ARRAY_BUFFER,
+                             (GLsizeiptr)list_count(&d->verts) *
+                                     (GLsizeiptr)sizeof(Draw2DVertex),
+                             NULL, GL_STREAM_DRAW);
+                glBufferSubData(GL_ARRAY_BUFFER, 0,
+                                (GLsizeiptr)list_count(&d->verts) *
+                                        (GLsizeiptr)sizeof(Draw2DVertex),
+                                list_get(&d->verts, 0));
+        }
+        s_bind_state(d, fb_w, fb_h);
 
         for(i = 0; i < list_count(&d->batches); i++) {
                 b = list_get(&d->batches, i);
+
+                if(b->callback) {
+                        UIDrawCallbackInfo info;
+
+                        info.x = b->rect[0];
+                        info.y = b->rect[1];
+                        info.w = b->rect[2];
+                        info.h = b->rect[3];
+                        info.fb_w = fb_w;
+                        info.fb_h = fb_h;
+                        info.scale = scale;
+
+                        /* GL has its origin at the bottom left */
+                        glViewport(b->rect[0], fb_h - b->rect[1] - b->rect[3],
+                                   b->rect[2], b->rect[3]);
+                        glScissor(b->clip[0], fb_h - b->clip[1] - b->clip[3],
+                                  b->clip[2], b->clip[3]);
+                        b->callback(&info, b->data);
+                        d->draw_calls++;
+
+                        /* It may have changed anything */
+                        s_bind_state(d, fb_w, fb_h);
+                        continue;
+                }
+
                 glBindTexture(GL_TEXTURE_2D, b->texture);
                 /* GL scissor has its origin at the bottom left */
                 glScissor(b->clip[0], fb_h - b->clip[1] - b->clip[3],
@@ -276,10 +303,11 @@ LOC void s_push_quad(Draw2D *d, const Quad *q, GLuint tex, const s32 clip[4])
         last = list_count(&d->batches) > 0 ?
                        list_get(&d->batches, list_count(&d->batches) - 1) :
                        NULL;
-        if(last && last->texture == tex &&
+        if(last && !last->callback && last->texture == tex &&
            memcmp(last->clip, clip, sizeof(last->clip)) == 0) {
                 last->count++;
         } else {
+                memset(&nb, 0, sizeof(nb));
                 nb.texture = tex;
                 memcpy(nb.clip, clip, sizeof(nb.clip));
                 nb.first = list_count(&d->verts) / 4;
@@ -415,6 +443,44 @@ LOC void s_image_cmd(Draw2D *d, const UIDrawCmd *cmd, f32 s, const s32 clip[4])
         q.mode = MODE_IMAGE;
         q.color = cmd->color.a ? cmd->color : ui_rgba(255, 255, 255, 255);
         s_push_quad(d, &q, cmd->texture, clip);
+}
+
+/* A batch of its own, so quads before and after it keep their order */
+LOC void s_callback_cmd(Draw2D *d, const UIDrawCmd *cmd, f32 s,
+                const s32 clip[4])
+{
+        Draw2DBatch nb;
+
+        if(!cmd->callback) return;
+
+        memset(&nb, 0, sizeof(nb));
+        nb.callback = cmd->callback;
+        nb.data = cmd->callback_data;
+        memcpy(nb.clip, clip, sizeof(nb.clip));
+        nb.rect[0] = (s32)roundf(cmd->rect.x * s);
+        nb.rect[1] = (s32)roundf(cmd->rect.y * s);
+        nb.rect[2] = (s32)roundf((cmd->rect.x + cmd->rect.w) * s) - nb.rect[0];
+        nb.rect[3] = (s32)roundf((cmd->rect.y + cmd->rect.h) * s) - nb.rect[1];
+        nb.first = list_count(&d->verts) / 4;
+        if(nb.rect[2] <= 0 || nb.rect[3] <= 0) return;
+        list_push(&d->batches, 1, &nb);
+}
+
+/* GL state for drawing quads; set again after every callback */
+LOC void s_bind_state(Draw2D *d, s32 fb_w, s32 fb_h)
+{
+        glViewport(0, 0, fb_w, fb_h);
+        glUseProgram(d->program);
+        glUniform2f(d->u_screen, (f32)fb_w, (f32)fb_h);
+        glUniform1i(d->u_tex, 0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindVertexArray(d->vao);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
+        glEnable(GL_SCISSOR_TEST);
 }
 
 LOC void s_ensure_indices(Draw2D *d, s32 quads)

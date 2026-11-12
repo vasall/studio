@@ -25,18 +25,29 @@ PUB GLuint gl_program_from_files(const char *vert_path, const char *frag_path)
 {
         char *vs_src;
         char *fs_src;
+        GLuint prog = 0;
+
+        vs_src = file_read(vert_path, NULL);
+        fs_src = file_read(frag_path, NULL);
+        if(vs_src && fs_src)
+                prog = gl_program_from_source(vs_src, fs_src, vert_path);
+
+        free(vs_src);
+        free(fs_src);
+        return prog;
+}
+
+PUB GLuint gl_program_from_source(const char *vert_src, const char *frag_src,
+                const char *name)
+{
         GLuint vs = 0;
         GLuint fs = 0;
         GLuint prog = 0;
         GLint ok;
         char log[1024];
 
-        vs_src = file_read(vert_path, NULL);
-        fs_src = file_read(frag_path, NULL);
-        if(!vs_src || !fs_src) goto out;
-
-        vs = s_compile(GL_VERTEX_SHADER, vs_src, vert_path);
-        fs = s_compile(GL_FRAGMENT_SHADER, fs_src, frag_path);
+        vs = s_compile(GL_VERTEX_SHADER, vert_src, name);
+        fs = s_compile(GL_FRAGMENT_SHADER, frag_src, name);
         if(!vs || !fs) goto out;
 
         prog = glCreateProgram();
@@ -54,8 +65,6 @@ PUB GLuint gl_program_from_files(const char *vert_path, const char *frag_path)
 out:
         if(vs) glDeleteShader(vs);
         if(fs) glDeleteShader(fs);
-        free(vs_src);
-        free(fs_src);
         return prog;
 }
 

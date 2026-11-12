@@ -1,8 +1,11 @@
 #include <workbench/gallery_view.h>
 
+#include <render/canvas_demo.h>
 #include <render/icon_ids.h>
+#include <ui/canvas.h>
 #include <ui/widgets.h>
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,6 +50,7 @@ typedef struct Gallery {
         s32 snap;
         s32 shadows;
         s32 busy;
+        s32 animate;
         s32 units;
         char name[64];
         char search[128];
@@ -76,6 +80,7 @@ LOC void s_toggles(Gallery *g, UI *ui);
 LOC void s_text(Gallery *g, UI *ui);
 LOC void s_values(Gallery *g, UI *ui);
 LOC void s_badges(UI *ui);
+LOC void s_canvas(Gallery *g, UI *ui);
 LOC void s_tree_and_list(Gallery *g, UI *ui);
 
 const ViewClass gallery_view_class = {
@@ -135,6 +140,7 @@ LOC void s_draw(View *view, UI *ui, UIBox *area)
         s_text(g, ui);
         s_values(g, ui);
         s_badges(ui);
+        s_canvas(g, ui);
         s_tree_and_list(g, ui);
         ui_scroll_end(ui);
 }
@@ -255,6 +261,66 @@ LOC void s_values(Gallery *g, UI *ui)
                                         materials[g->material]));
         }
         ui_label(ui, "Material", "gallery-text");
+        ui_box_end(ui); /* gallery-row */
+        ui_box_end(ui); /* gallery-section */
+}
+
+LOC void s_canvas(Gallery *g, UI *ui)
+{
+        UICanvas *cv;
+        CanvasDemoBox *gl_box;
+        UIColor grid = ui_theme_color(ui->theme, "border-subtle-00",
+                        ui_hex(0x393939ff));
+        UIColor accent = ui_theme_color(ui->theme, "interactive",
+                        ui_hex(0x4589ffff));
+        UIColor text = ui_theme_color(ui->theme, "text-primary",
+                        ui_hex(0xf4f4f4ff));
+        f32 x;
+        f32 y;
+        f32 phase = 0.0f;
+
+        s_section(ui, "Canvas");
+        cv = ui_canvas(ui, "canvas", NULL);
+        if(cv) {
+                /* Grid lines, through the UI renderer */
+                for(x = 40.0f; x < cv->width; x += 40.0f)
+                        ui_canvas_rect(cv, ui_rect(x, 0, 1, cv->height), grid);
+                for(y = 40.0f; y < cv->height; y += 40.0f)
+                        ui_canvas_rect(cv, ui_rect(0, y, cv->width, 1), grid);
+
+                /* A box through the UI renderer */
+                ui_canvas_box(cv, ui_rect(24, 24, 120, 72),
+                                ui_rgba(accent.r, accent.g, accent.b, 60),
+                                accent, 1.0f, 6.0f);
+
+                /* A box with own GL code; it moves while animating, which
+                   redraws every frame like a live plot would */
+                if(g->animate) {
+                        phase = (f32)sin(ui->time * 2.0) * 0.5f + 0.5f;
+                        ui->changed = 1;
+                }
+                gl_box = arena_alloc(&ui->arena, sizeof(CanvasDemoBox));
+                if(gl_box) {
+                        gl_box->x = 0.35f + phase * 0.4f;
+                        gl_box->y = 0.3f;
+                        gl_box->w = 0.2f;
+                        gl_box->h = 0.4f;
+                        gl_box->color = ui_hex(0x42be65ff);
+                        ui_canvas_gl(cv, ui_rect(0, 0, cv->width, cv->height),
+                                        canvas_demo_draw, gl_box);
+                }
+
+                /* Shapes after the GL part are drawn on top of it */
+                if(cv->sig.hovering) {
+                        ui_canvas_box(cv, ui_rect(cv->sig.mouse_x - 4.0f,
+                                                cv->sig.mouse_y - 4.0f, 8, 8),
+                                        text, text, 0.0f, 4.0f);
+                }
+        }
+        s_row(ui);
+        ui_checkbox(ui, "Animate", &g->animate, NULL);
+        ui_label(ui, "Blue: UI shapes. Green: own GL code. The dot follows "
+                        "the mouse.", "gallery-hint");
         ui_box_end(ui); /* gallery-row */
         ui_box_end(ui); /* gallery-section */
 }

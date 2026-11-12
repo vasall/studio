@@ -48,8 +48,9 @@ at startup) shows each of them:
 
 label, icon, button, icon button, tooltip, tab, splitter, scroll area,
 menu / context menu, checkbox, radio button, single-line text field,
-slider, progress bar, dropdown, badge, tree row, virtualized list and
-notifications (toasts).
+slider, progress bar, dropdown, badge, tree row, virtualized list,
+notifications (toasts) and a canvas for 2D shapes (`include/ui/canvas.h`),
+which can also draw with own GL code for heavy content like live plots.
 
 Tab and Shift+Tab move the keyboard focus between focusable widgets and
 scroll them into view; Esc or a click elsewhere drops it.

@@ -480,6 +480,15 @@ tree-icon.text-color          = $icon-secondary
 tree-label.text-color         = $text-secondary
 tree-label.selected.text-color = $text-primary
 
+# --- canvas ------------------------------------------------------------------
+
+canvas.width                  = grow
+canvas.height                 = 200
+canvas.infill                 = $layer-01
+canvas.border-width           = 1
+canvas.border-color           = $border-subtle-00
+canvas.padding                = 1
+
 # --- notifications -----------------------------------------------------------
 
 toasts.gap                    = 8
