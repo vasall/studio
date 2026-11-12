@@ -6,7 +6,7 @@
 #include <devkit/memory/list.h>
 #include <devkit/memory/hashmap.h>
 
-#include <devkit/util/hash.h>
+#include <core/hash.h>
 #include <ui/style.h>
 
 /******************************************************************************

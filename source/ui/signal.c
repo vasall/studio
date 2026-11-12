@@ -18,8 +18,9 @@ PUB UISignal ui_signal(UI *ui, UIBox *box)
         f32 dy;
 
         memset(&sig, 0, sizeof(sig));
-        if(!box || !box->state || !in || (box->flags & UI_BOX_DISABLED))
+        if(!box || !box->state || !in || (box->flags & UI_BOX_DISABLED)) {
                 return sig;
+        }
 
         st = box->state;
         sig.mouse_x = in->mouse_x - st->rect.x;

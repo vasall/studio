@@ -16,7 +16,7 @@
  *
  ******************************************************************************/
 
-LOC UIBoxState *s_state_get_or_add(UI *ui, u64 key);
+LOC UIBoxState *s_state_get_or_add(UI *ui, UIBoxKey key);
 LOC void s_store_rects(UI *ui, UIBox *box, UIBox **active_box);
 LOC UIBox *s_hit_test(UIBox *box, f32 x, f32 y, u32 need_flags);
 LOC UIBox *s_scroll_target(UIBox *box, f32 x, f32 y, f32 wx, f32 wy);
@@ -99,8 +99,8 @@ PUB s32 ui_end_frame(UI *ui)
         UIInput *in = ui->input;
         UIBox *active_box = NULL;
         UIBox *hit = NULL;
-        u64 old_hot = ui->hot;
-        u64 old_active = ui->active;
+        UIBoxKey old_hot = ui->hot;
+        UIBoxKey old_active = ui->active;
         s32 hit_layer = -1;
         s32 i;
 
@@ -372,7 +372,7 @@ PUB void ui_box_set_text(UI *ui, UIBox *box, const char *text)
         box->text_len = len;
 }
 
-PUB UIBoxState *ui_state_of(UI *ui, u64 key)
+PUB UIBoxState *ui_state_of(UI *ui, UIBoxKey key)
 {
         u64 packed;
         PoolHandle h;
@@ -382,7 +382,7 @@ PUB UIBoxState *ui_state_of(UI *ui, u64 key)
         return pool_get(&ui->states, h);
 }
 
-PUB void ui_set_focus(UI *ui, u64 key)
+PUB void ui_set_focus(UI *ui, UIBoxKey key)
 {
         if(ui->focus != key) ui->changed = 1;
         ui->focus = key;
@@ -393,7 +393,7 @@ PUB void ui_request_wakeup(UI *ui, f64 t)
         if(ui->wakeup == 0.0 || t < ui->wakeup) ui->wakeup = t;
 }
 
-PUB void ui_popup_open(UI *ui, u64 key, f32 x, f32 y)
+PUB void ui_popup_open(UI *ui, UIBoxKey key, f32 x, f32 y)
 {
         ui->popup_key = key;
         ui->popup_x = x;
@@ -408,16 +408,16 @@ PUB void ui_popup_close(UI *ui)
         ui->popup_key = 0;
 }
 
-PUB s32 ui_popup_is_open(UI *ui, u64 key)
+PUB s32 ui_popup_is_open(UI *ui, UIBoxKey key)
 {
         return key != 0 && ui->popup_key == key;
 }
 
-PUB u64 ui_key(UI *ui, const char *id)
+PUB UIBoxKey ui_key(UI *ui, const char *id)
 {
         UIBox *parent = ui_parent(ui);
         u64 seed = parent ? parent->seed : HASH_SEED;
-        u64 key;
+        UIBoxKey key;
 
         if(ui->seed_depth > 0) seed ^= ui->seeds[ui->seed_depth - 1];
         key = hash_str(id, seed);
@@ -444,7 +444,7 @@ PUB s32 ui_display_len(const char *text)
  *
  ******************************************************************************/
 
-LOC UIBoxState *s_state_get_or_add(UI *ui, u64 key)
+LOC UIBoxState *s_state_get_or_add(UI *ui, UIBoxKey key)
 {
         UIBoxState *st;
         PoolHandle h;

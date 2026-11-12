@@ -44,7 +44,7 @@ typedef struct Workbench {
         s32 panel_tab;          /* ShellPanelTab */
 
         u32 dummy_count;        /* For "Dummy N" titles */
-        u64 menu_keys[4];       /* File, Edit, View, Help */
+        UIBoxKey menu_keys[4];  /* File, Edit, View, Help */
 } Workbench;
 
 /******************************************************************************

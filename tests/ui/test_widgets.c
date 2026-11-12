@@ -378,7 +378,7 @@ void test_slider_drag_and_keys(void)
 
 void test_dropdown_opens_and_picks_with_keys(void)
 {
-        u64 key;
+        UIBoxKey key;
 
         s_selected = 0;
         s_frame(s_build_dropdown);

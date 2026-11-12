@@ -8,7 +8,7 @@
 #include <devkit/memory/hashmap.h>
 
 #include <core/arena.h>
-#include <devkit/util/hash.h>
+#include <core/hash.h>
 #include <ui/draw.h>
 #include <ui/input.h>
 #include <ui/style.h>
@@ -73,6 +73,13 @@ typedef enum UIToastKind {
         UI_TOAST_ERROR
 } UIToastKind;
 
+/*
+ * Identity of a box across frames: its id hashed with the parent's seed (see
+ * ui_box). Boxes are rebuilt every frame, so the key, not a pointer, links a
+ * box to its state and to hot/active/focus. 0 means no box (anonymous).
+ */
+typedef u64 UIBoxKey;
+
 typedef struct UI UI;
 typedef struct UIBox UIBox;
 
@@ -96,7 +103,7 @@ typedef void (*UIClipboardSetFn)(void *user, const char *text, s32 len);
  * Freed when the box isn't built for a frame.
  */
 typedef struct UIBoxState {
-        u64 key;
+        UIBoxKey key;
         u64 last_frame;         /* Frame the box was last built in */
         UIRect rect;            /* Rect from the last layout */
         UIRect clip;            /* Visible part of rect */
@@ -110,7 +117,7 @@ typedef struct UIBoxState {
 } UIBoxState;
 
 struct UIBox {
-        u64 key;                /* 0 for anonymous boxes */
+        UIBoxKey key;           /* 0 for anonymous boxes */
         u64 seed;               /* Children's ids are hashed with this: the
                                    key, or the parent's seed if anonymous */
         u32 flags;              /* UIBoxFlag */
@@ -197,23 +204,23 @@ struct UI {
         s32 box_count;
 
         /* Interaction, keys of boxes */
-        u64 hot;                /* Under the mouse (from last frame) */
+        UIBoxKey hot;           /* Under the mouse (from last frame) */
         s32 hot_layer;
-        u64 active;             /* Got the press, owns the mouse */
-        u64 focus;              /* Keyboard owner */
+        UIBoxKey active;        /* Got the press, owns the mouse */
+        UIBoxKey focus;         /* Keyboard owner */
         u8 dragging;            /* Active box moved past the threshold */
         f32 press_x;
         f32 press_y;
         u8 cursor;
 
         /* Popup (context menu or dropdown), one at a time */
-        u64 popup_key;
+        UIBoxKey popup_key;
         f32 popup_x;
         f32 popup_y;
         u64 popup_frame;        /* Frame it was opened in */
 
         /* Tooltip */
-        u64 tooltip_key;
+        UIBoxKey tooltip_key;
         f64 tooltip_start;
 
         /* Notifications, oldest first */
@@ -309,7 +316,7 @@ PUB void ui_box_set_text(UI *ui, UIBox *box, const char *text);
 /*
  * Get the state of a box by key (from last frame), or NULL.
  */
-PUB UIBoxState *ui_state_of(UI *ui, u64 key);
+PUB UIBoxState *ui_state_of(UI *ui, UIBoxKey key);
 
 /*
  * Interaction with a box this frame.
@@ -320,7 +327,7 @@ PUB UISignal ui_signal(UI *ui, UIBox *box);
  * Keyboard focus. A press on a box that isn't focusable clears it, Tab and
  * Shift+Tab move it between UI_BOX_FOCUSABLE boxes, Esc clears it.
  */
-PUB void ui_set_focus(UI *ui, u64 key);
+PUB void ui_set_focus(UI *ui, UIBoxKey key);
 
 /*
  * Ask for a frame at time t (seconds), e.g. for a delayed tooltip.
@@ -331,14 +338,14 @@ PUB void ui_request_wakeup(UI *ui, f64 t);
  * Popups: one is open at a time. It closes on a click outside of the popup
  * layer or with ui_popup_close.
  */
-PUB void ui_popup_open(UI *ui, u64 key, f32 x, f32 y);
+PUB void ui_popup_open(UI *ui, UIBoxKey key, f32 x, f32 y);
 PUB void ui_popup_close(UI *ui);
-PUB s32 ui_popup_is_open(UI *ui, u64 key);
+PUB s32 ui_popup_is_open(UI *ui, UIBoxKey key);
 
 /*
  * Key of a box id under the current parent, without creating the box.
  */
-PUB u64 ui_key(UI *ui, const char *id);
+PUB UIBoxKey ui_key(UI *ui, const char *id);
 
 /*
  * Add a draw command (used by custom draw callbacks).

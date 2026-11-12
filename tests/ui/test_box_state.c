@@ -62,7 +62,7 @@ LOC UISignal s_frame_with_button(s32 with_button)
 void test_state_survives_frames(void)
 {
         UIBox *b;
-        u64 key;
+        UIBoxKey key;
 
         ui_begin_frame(&s_ui, &s_input, 400.0f, 300.0f, 0.0);
         b = ui_box(&s_ui, "x", NULL, 0);
@@ -80,7 +80,7 @@ void test_state_survives_frames(void)
 void test_state_freed_when_not_built(void)
 {
         UIBox *b;
-        u64 key;
+        UIBoxKey key;
 
         ui_begin_frame(&s_ui, &s_input, 400.0f, 300.0f, 0.0);
         b = ui_box(&s_ui, "x", NULL, 0);

@@ -14,13 +14,13 @@
 
 typedef struct UITabResult {
         UISignal sig;           /* Of the tab itself */
-        u64 key;                /* Key of the tab box (for its state/rect) */
+        UIBoxKey key;           /* Key of the tab box (for its state/rect) */
         s32 close_clicked;
 } UITabResult;
 
 typedef struct UITextFieldResult {
         UISignal sig;
-        u64 key;                /* Key of the field, e.g. for ui_set_focus */
+        UIBoxKey key;           /* Key of the field, e.g. for ui_set_focus */
         s32 changed;            /* The text was edited this frame */
         s32 submitted;          /* Enter was pressed */
         s32 cancelled;          /* Esc was pressed; focus is dropped */
@@ -116,7 +116,7 @@ PUB void ui_scroll_end(UI *ui);
  *           ui_menu_end(ui);
  *   }
  */
-PUB s32 ui_menu_begin(UI *ui, u64 key);
+PUB s32 ui_menu_begin(UI *ui, UIBoxKey key);
 PUB s32 ui_menu_item(UI *ui, const char *label, const char *shortcut);
 PUB void ui_menu_separator(UI *ui);
 PUB void ui_menu_end(UI *ui);

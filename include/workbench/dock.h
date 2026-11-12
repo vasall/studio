@@ -76,7 +76,7 @@ struct Dock {
         void *clone_user;
 
         /* Tab context menu */
-        u64 menu_key;
+        UIBoxKey menu_key;
         ViewHandle menu_view;
         DockNode *menu_node;
 };

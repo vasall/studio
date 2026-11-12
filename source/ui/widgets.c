@@ -21,7 +21,7 @@
 LOC void s_scrollbar(UI *ui, UIBox *area, s32 a);
 LOC s32 s_menu_item(UI *ui, const char *id, const char *label,
                 const char *shortcut, s32 selected);
-LOC s32 s_take_key(UI *ui, u64 key, u32 k, u16 mods);
+LOC s32 s_take_key(UI *ui, UIBoxKey key, u32 k, u16 mods);
 LOC void s_toast_remove(UI *ui, s32 i);
 LOC f32 s_clampf(f32 v, f32 lo, f32 hi);
 
@@ -223,7 +223,7 @@ PUB void ui_scroll_end(UI *ui)
         ui_box_end(ui); /* scroll area of ui_scroll_begin */
 }
 
-PUB s32 ui_menu_begin(UI *ui, u64 key)
+PUB s32 ui_menu_begin(UI *ui, UIBoxKey key)
 {
         UIBox *menu;
         f32 x;
@@ -445,7 +445,7 @@ PUB s32 ui_dropdown(UI *ui, const char *id, s32 *selected,
         UIBox *label;
         UIBox *menu;
         UISignal sig;
-        u64 key = ui_key(ui, id);
+        UIBoxKey key = ui_key(ui, id);
         s32 open = ui_popup_is_open(ui, key);
         s32 cur = *selected;
         s32 toggle = 0;
@@ -815,7 +815,7 @@ LOC s32 s_menu_item(UI *ui, const char *id, const char *label,
 }
 
 /* Take one unhandled key press if the box with key has focus */
-LOC s32 s_take_key(UI *ui, u64 key, u32 k, u16 mods)
+LOC s32 s_take_key(UI *ui, UIBoxKey key, u32 k, u16 mods)
 {
         UIInput *in = ui->input;
         s32 i;
