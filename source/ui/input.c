@@ -8,7 +8,7 @@
  *
  ******************************************************************************/
 
-PUB void ui_input_next_frame(UiInput *in)
+PUB void ui_input_next_frame(UIInput *in)
 {
         if(!in) return;
 
@@ -20,14 +20,14 @@ PUB void ui_input_next_frame(UiInput *in)
         in->event_count = 0;
 }
 
-PUB s32 ui_input_push(UiInput *in, const UiEvent *ev)
+PUB s32 ui_input_push(UIInput *in, const UIEvent *ev)
 {
         if(!in || !ev || in->event_count >= UI_INPUT_MAX_EVENTS) return -1;
         in->events[in->event_count++] = *ev;
         return 0;
 }
 
-PUB s32 ui_event_is_key(const UiEvent *ev, u32 key, u32 scan, u16 mods)
+PUB s32 ui_event_is_key(const UIEvent *ev, u32 key, u32 scan, u16 mods)
 {
         if(!ev || ev->kind != UI_EVENT_KEY_DOWN || ev->consumed) return 0;
         if(ev->mods != mods) return 0;

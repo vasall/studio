@@ -11,12 +11,12 @@
  * extra text from the app, e.g. frame time and draw calls. Only does
  * something while ui->debug is set.
  */
-PUB void ui_debug_panel(Ui *ui, const char *info);
+PUB void ui_debug_panel(UI *ui, const char *info);
 
 /*
  * Add outline draw commands for every box (called by ui_end_frame while
  * ui->debug is set).
  */
-PUB void ui_debug_outlines(Ui *ui);
+PUB void ui_debug_outlines(UI *ui);
 
 #endif /* VASALL_STUDIO_UI_DEBUG_H */

@@ -30,7 +30,7 @@ typedef struct ViewClass {
         const char *type;
 
         /* Build the content into area (the current parent) */
-        void (*draw)(View *view, Ui *ui, UiBox *area);
+        void (*draw)(View *view, UI *ui, UIBox *area);
 
         /* Optional */
         u16 (*icon)(View *view);

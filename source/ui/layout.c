@@ -26,28 +26,28 @@
  ******************************************************************************/
 
 typedef struct LayoutCtx {
-        UiMeasureFn measure;
-        UiLineHeightFn line_height;
+        UIMeasureFn measure;
+        UILineHeightFn line_height;
         void *user;
 } LayoutCtx;
 
-LOC void s_fit(LayoutCtx *ctx, UiBox *box, s32 a);
-LOC void s_solve(UiBox *box, s32 a);
-LOC void s_place(UiBox *box);
+LOC void s_fit(LayoutCtx *ctx, UIBox *box, s32 a);
+LOC void s_solve(UIBox *box, s32 a);
+LOC void s_place(UIBox *box);
 
-LOC s32 s_main_axis(const UiBox *box);
-LOC f32 s_pad_lo(const UiBox *box, s32 a);
-LOC f32 s_pad_hi(const UiBox *box, s32 a);
-LOC f32 s_margin_lo(const UiBox *box, s32 a);
-LOC f32 s_margin_hi(const UiBox *box, s32 a);
-LOC f32 s_outer(const UiBox *box, s32 a);
-LOC f32 s_fit_outer(const UiBox *box, s32 a);
-LOC f32 s_avail(const UiBox *box, s32 a);
-LOC const UiSize *s_size_of(const UiBox *box, s32 a);
-LOC f32 s_clamp(const UiSize *s, f32 v);
-LOC s32 s_in_flow(const UiBox *box);
+LOC s32 s_main_axis(const UIBox *box);
+LOC f32 s_pad_lo(const UIBox *box, s32 a);
+LOC f32 s_pad_hi(const UIBox *box, s32 a);
+LOC f32 s_margin_lo(const UIBox *box, s32 a);
+LOC f32 s_margin_hi(const UIBox *box, s32 a);
+LOC f32 s_outer(const UIBox *box, s32 a);
+LOC f32 s_fit_outer(const UIBox *box, s32 a);
+LOC f32 s_avail(const UIBox *box, s32 a);
+LOC const UISize *s_size_of(const UIBox *box, s32 a);
+LOC f32 s_clamp(const UISize *s, f32 v);
+LOC s32 s_in_flow(const UIBox *box);
 LOC f32 s_align(f32 avail, f32 used, u8 align);
-LOC f32 s_intrinsic_own(LayoutCtx *ctx, const UiBox *box, s32 a);
+LOC f32 s_intrinsic_own(LayoutCtx *ctx, const UIBox *box, s32 a);
 
 /******************************************************************************
  *
@@ -55,8 +55,8 @@ LOC f32 s_intrinsic_own(LayoutCtx *ctx, const UiBox *box, s32 a);
  *
  ******************************************************************************/
 
-PUB void ui_layout(UiBox *root, UiMeasureFn measure,
-                UiLineHeightFn line_height, void *user)
+PUB void ui_layout(UIBox *root, UIMeasureFn measure,
+                UILineHeightFn line_height, void *user)
 {
         LayoutCtx ctx;
         s32 a;
@@ -96,10 +96,10 @@ PUB void ui_layout(UiBox *root, UiMeasureFn measure,
  * Bottom-up: set size[a] of fixed and FIT boxes. PERCENT and GROW boxes get
  * their min here and their real size from the parent in s_solve.
  */
-LOC void s_fit(LayoutCtx *ctx, UiBox *box, s32 a)
+LOC void s_fit(LayoutCtx *ctx, UIBox *box, s32 a)
 {
-        const UiSize *sz = s_size_of(box, a);
-        UiBox *c;
+        const UISize *sz = s_size_of(box, a);
+        UIBox *c;
         s32 main = s_main_axis(box);
         f32 content = 0.0f;
         f32 v;
@@ -166,10 +166,10 @@ LOC void s_fit(LayoutCtx *ctx, UiBox *box, s32 a)
 /*
  * Top-down: box->size[a] is final, set the sizes of its children.
  */
-LOC void s_solve(UiBox *box, s32 a)
+LOC void s_solve(UIBox *box, s32 a)
 {
-        UiBox *c;
-        const UiSize *sz;
+        UIBox *c;
+        const UISize *sz;
         s32 main = s_main_axis(box);
         f32 avail = s_avail(box, a);
         f32 used;
@@ -195,8 +195,8 @@ LOC void s_solve(UiBox *box, s32 a)
                 f32 line_used = 0.0f;
                 s32 line = 0;
                 s32 in_line = 0;
-                UiBox *line_first = NULL;
-                UiBox *d;
+                UIBox *line_first = NULL;
+                UIBox *d;
 
                 for(c = box->first;; c = c->next) {
                         s32 line_ends = !c;
@@ -370,9 +370,9 @@ LOC void s_solve(UiBox *box, s32 a)
 /*
  * Top-down: positions and clip rects. box->rect and box->clip are set.
  */
-LOC void s_place(UiBox *box)
+LOC void s_place(UIBox *box)
 {
-        UiBox *c;
+        UIBox *c;
         s32 main = s_main_axis(box);
         s32 cross = main == UI_AXIS_X ? UI_AXIS_Y : UI_AXIS_X;
         f32 avail[2];
@@ -382,8 +382,8 @@ LOC void s_place(UiBox *box)
         f32 used;
         f32 cursor;
         f32 bw;
-        UiRect inner;
-        UiRect child_clip;
+        UIRect inner;
+        UIRect child_clip;
         s32 n;
         s32 a;
 
@@ -544,35 +544,35 @@ LOC void s_place(UiBox *box)
 }
 
 /* Axis children are placed along, -1 for STACK */
-LOC s32 s_main_axis(const UiBox *box)
+LOC s32 s_main_axis(const UIBox *box)
 {
         if(box->style.layout == UI_LAYOUT_ROW) return UI_AXIS_X;
         if(box->style.layout == UI_LAYOUT_COLUMN) return UI_AXIS_Y;
         return -1;
 }
 
-LOC f32 s_pad_lo(const UiBox *box, s32 a)
+LOC f32 s_pad_lo(const UIBox *box, s32 a)
 {
         return box->style.padding[a == UI_AXIS_X ? UI_LEFT : UI_TOP];
 }
 
-LOC f32 s_pad_hi(const UiBox *box, s32 a)
+LOC f32 s_pad_hi(const UIBox *box, s32 a)
 {
         return box->style.padding[a == UI_AXIS_X ? UI_RIGHT : UI_BOTTOM];
 }
 
-LOC f32 s_margin_lo(const UiBox *box, s32 a)
+LOC f32 s_margin_lo(const UIBox *box, s32 a)
 {
         return box->style.margin[a == UI_AXIS_X ? UI_LEFT : UI_TOP];
 }
 
-LOC f32 s_margin_hi(const UiBox *box, s32 a)
+LOC f32 s_margin_hi(const UIBox *box, s32 a)
 {
         return box->style.margin[a == UI_AXIS_X ? UI_RIGHT : UI_BOTTOM];
 }
 
 /* Size including margins */
-LOC f32 s_outer(const UiBox *box, s32 a)
+LOC f32 s_outer(const UIBox *box, s32 a)
 {
         return box->size[a] + s_margin_lo(box, a) + s_margin_hi(box, a);
 }
@@ -581,7 +581,7 @@ LOC f32 s_outer(const UiBox *box, s32 a)
  * Size including margins, as seen by a FIT parent: GROW children count with
  * their content size, so a fitting menu is as wide as its widest item.
  */
-LOC f32 s_fit_outer(const UiBox *box, s32 a)
+LOC f32 s_fit_outer(const UIBox *box, s32 a)
 {
         f32 v = s_size_of(box, a)->kind == UI_SIZE_GROW ? box->basis[a] :
                 box->size[a];
@@ -590,25 +590,25 @@ LOC f32 s_fit_outer(const UiBox *box, s32 a)
 }
 
 /* Size of the content box */
-LOC f32 s_avail(const UiBox *box, s32 a)
+LOC f32 s_avail(const UIBox *box, s32 a)
 {
         f32 v = box->size[a] - s_pad_lo(box, a) - s_pad_hi(box, a);
         return v > 0.0f ? v : 0.0f;
 }
 
-LOC const UiSize *s_size_of(const UiBox *box, s32 a)
+LOC const UISize *s_size_of(const UIBox *box, s32 a)
 {
         return a == UI_AXIS_X ? &box->style.width : &box->style.height;
 }
 
-LOC f32 s_clamp(const UiSize *s, f32 v)
+LOC f32 s_clamp(const UISize *s, f32 v)
 {
         if(s->max > 0.0f && v > s->max) v = s->max;
         if(v < s->min) v = s->min;
         return v;
 }
 
-LOC s32 s_in_flow(const UiBox *box)
+LOC s32 s_in_flow(const UIBox *box)
 {
         return !(box->flags & UI_BOX_FLOATING);
 }
@@ -625,7 +625,7 @@ LOC f32 s_align(f32 avail, f32 used, u8 align)
 }
 
 /* Size of the box's own icon and text along an axis */
-LOC f32 s_intrinsic_own(LayoutCtx *ctx, const UiBox *box, s32 a)
+LOC f32 s_intrinsic_own(LayoutCtx *ctx, const UIBox *box, s32 a)
 {
         f32 text = 0.0f;
         f32 icon = box->icon ? (f32)ICON_SIZE : 0.0f;

@@ -2,10 +2,15 @@
 
 #include <render/icon_ids.h>
 
+#include <math.h>
+#include <stdio.h>
 #include <string.h>
 
 #define SCROLLBAR_SIZE     10.0f
 #define SCROLLBAR_MIN_LEN  24.0f
+#define TREE_INDENT        12.0f
+#define SLIDER_THUMB       14.0f
+#define TOAST_MARGIN       12.0f
 
 /******************************************************************************
  *
@@ -13,7 +18,12 @@
  *
  ******************************************************************************/
 
-LOC void s_scrollbar(Ui *ui, UiBox *area, s32 a);
+LOC void s_scrollbar(UI *ui, UIBox *area, s32 a);
+LOC s32 s_menu_item(UI *ui, const char *id, const char *label,
+                const char *shortcut, s32 selected);
+LOC s32 s_take_key(UI *ui, u64 key, u32 k, u16 mods);
+LOC void s_toast_remove(UI *ui, s32 i);
+LOC f32 s_clampf(f32 v, f32 lo, f32 hi);
 
 /******************************************************************************
  *
@@ -21,44 +31,44 @@ LOC void s_scrollbar(Ui *ui, UiBox *area, s32 a);
  *
  ******************************************************************************/
 
-PUB UiBox *ui_spacer(Ui *ui, UiSize w, UiSize h)
+PUB UIBox *ui_spacer(UI *ui, UISize w, UISize h)
 {
-        UiBox *box = ui_box(ui, NULL, NULL, 0);
+        UIBox *box = ui_box(ui, NULL, NULL, 0);
 
         box->style.width = w;
         box->style.height = h;
         return box;
 }
 
-PUB UiBox *ui_label(Ui *ui, const char *text, const char *cls)
+PUB UIBox *ui_label(UI *ui, const char *text, const char *cls)
 {
-        UiBox *box = ui_box(ui, NULL, cls ? cls : "label", 0);
+        UIBox *box = ui_box(ui, NULL, cls ? cls : "label", 0);
 
         ui_box_set_text(ui, box, text);
         return box;
 }
 
-PUB UiBox *ui_icon(Ui *ui, u16 icon, const char *cls)
+PUB UIBox *ui_icon(UI *ui, u16 icon, const char *cls)
 {
-        UiBox *box = ui_box(ui, NULL, cls ? cls : "icon", 0);
+        UIBox *box = ui_box(ui, NULL, cls ? cls : "icon", 0);
 
         box->icon = icon;
         return box;
 }
 
-PUB UiSignal ui_button(Ui *ui, const char *label, const char *cls)
+PUB UISignal ui_button(UI *ui, const char *label, const char *cls)
 {
-        UiBox *box = ui_box(ui, label, cls ? cls : "button", UI_BOX_CLICKABLE);
+        UIBox *box = ui_box(ui, label, cls ? cls : "button", UI_BOX_CLICKABLE);
 
         box->cursor = UI_CURSOR_POINTER;
         ui_box_set_text(ui, box, label);
         return ui_signal(ui, box);
 }
 
-PUB UiSignal ui_icon_button(Ui *ui, const char *id, u16 icon,
+PUB UISignal ui_icon_button(UI *ui, const char *id, u16 icon,
                 const char *tooltip, const char *cls)
 {
-        UiBox *box = ui_box(ui, id, cls ? cls : "icon-button",
+        UIBox *box = ui_box(ui, id, cls ? cls : "icon-button",
                         UI_BOX_CLICKABLE);
 
         box->icon = icon;
@@ -67,10 +77,10 @@ PUB UiSignal ui_icon_button(Ui *ui, const char *id, u16 icon,
         return ui_signal(ui, box);
 }
 
-PUB void ui_tooltip(Ui *ui, UiBox *box, const char *text)
+PUB void ui_tooltip(UI *ui, UIBox *box, const char *text)
 {
-        UiBox *tip;
-        UiBoxState *st;
+        UIBox *tip;
+        UIBoxState *st;
         f32 x;
         f32 y;
 
@@ -99,15 +109,15 @@ PUB void ui_tooltip(Ui *ui, UiBox *box, const char *text)
         ui_layer_end(ui);
 }
 
-PUB UiTabResult ui_tab(Ui *ui, const char *id, const char *title, u16 icon,
+PUB UITabResult ui_tab(UI *ui, const char *id, const char *title, u16 icon,
                 s32 selected, s32 closable, const char *cls)
 {
-        UiTabResult res;
-        UiBox *tab;
-        UiBox *row;
-        UiBox *close;
-        UiBox *accent;
-        UiSignal close_sig;
+        UITabResult res;
+        UIBox *tab;
+        UIBox *row;
+        UIBox *close;
+        UIBox *accent;
+        UISignal close_sig;
         s32 show_close;
 
         memset(&res, 0, sizeof(res));
@@ -132,13 +142,13 @@ PUB UiTabResult ui_tab(Ui *ui, const char *id, const char *title, u16 icon,
                 close_sig = ui_signal(ui, close);
                 res.close_clicked = close_sig.clicked;
         }
-        ui_box_end(ui);
+        ui_box_end(ui); /* tab-row */
 
         if(selected) {
                 accent = ui_box(ui, NULL, "tab-accent", 0);
                 accent->style.width = ui_grow(1.0f);
         }
-        ui_box_end(ui);
+        ui_box_end(ui); /* tab */
 
         res.sig = ui_signal(ui, tab);
         res.key = tab->key;
@@ -146,11 +156,11 @@ PUB UiTabResult ui_tab(Ui *ui, const char *id, const char *title, u16 icon,
         return res;
 }
 
-PUB f32 ui_splitter(Ui *ui, const char *id, s32 axis, const char *cls)
+PUB f32 ui_splitter(UI *ui, const char *id, s32 axis, const char *cls)
 {
-        UiBox *box;
-        UiBox *line;
-        UiSignal sig;
+        UIBox *box;
+        UIBox *line;
+        UISignal sig;
         f32 drag;
         f32 delta = 0.0f;
         s32 lit;
@@ -180,7 +190,7 @@ PUB f32 ui_splitter(Ui *ui, const char *id, s32 axis, const char *cls)
                 line->style.width = ui_grow(1.0f);
                 line->style.height = ui_px(lit ? 3.0f : 1.0f);
         }
-        ui_box_end(ui);
+        ui_box_end(ui); /* splitter */
 
         sig = ui_signal(ui, box);
         if(!box->state) return 0.0f;
@@ -194,28 +204,28 @@ PUB f32 ui_splitter(Ui *ui, const char *id, s32 axis, const char *cls)
         return delta;
 }
 
-PUB UiBox *ui_scroll_begin(Ui *ui, const char *id, const char *cls)
+PUB UIBox *ui_scroll_begin(UI *ui, const char *id, const char *cls)
 {
-        UiBox *box = ui_box_begin(ui, id, cls, 0);
+        UIBox *box = ui_box_begin(ui, id, cls, 0);
 
         box->style.overflow = UI_OVERFLOW_SCROLL;
         return box;
 }
 
-PUB void ui_scroll_end(Ui *ui)
+PUB void ui_scroll_end(UI *ui)
 {
-        UiBox *area = ui_parent(ui);
+        UIBox *area = ui_parent(ui);
 
         if(area && area->state) {
                 s_scrollbar(ui, area, UI_AXIS_X);
                 s_scrollbar(ui, area, UI_AXIS_Y);
         }
-        ui_box_end(ui);
+        ui_box_end(ui); /* scroll area of ui_scroll_begin */
 }
 
-PUB s32 ui_menu_begin(Ui *ui, u64 key)
+PUB s32 ui_menu_begin(UI *ui, u64 key)
 {
-        UiBox *menu;
+        UIBox *menu;
         f32 x;
         f32 y;
 
@@ -240,36 +250,465 @@ PUB s32 ui_menu_begin(Ui *ui, u64 key)
         return 1;
 }
 
-PUB s32 ui_menu_item(Ui *ui, const char *label, const char *shortcut)
+PUB s32 ui_menu_item(UI *ui, const char *label, const char *shortcut)
 {
-        UiBox *item;
-        UiBox *text;
-        UiSignal sig;
+        return s_menu_item(ui, label, label, shortcut, 0);
+}
 
-        item = ui_box_begin(ui, label, "menu-item", UI_BOX_CLICKABLE);
-        text = ui_label(ui, label, "menu-item-label");
-        text->style.width = ui_grow(1.0f);
-        if(shortcut) ui_label(ui, shortcut, "menu-item-shortcut");
-        ui_box_end(ui);
+PUB void ui_menu_separator(UI *ui)
+{
+        ui_box(ui, NULL, "menu-separator", 0);
+}
 
-        sig = ui_signal(ui, item);
-        if(sig.clicked) {
-                ui_popup_close(ui);
+PUB void ui_menu_end(UI *ui)
+{
+        ui_box_end(ui); /* menu of ui_menu_begin */
+        ui_pop_id(ui);
+        ui_layer_end(ui);
+}
+
+PUB s32 ui_checkbox(UI *ui, const char *label, s32 *value, const char *cls)
+{
+        UIBox *row;
+        UIBox *mark;
+        UISignal sig;
+        s32 on = value && *value;
+
+        row = ui_box_begin(ui, label, cls ? cls : "checkbox",
+                        UI_BOX_CLICKABLE | UI_BOX_FOCUSABLE |
+                        (on ? UI_BOX_SELECTED : 0));
+        row->cursor = UI_CURSOR_POINTER;
+        mark = ui_box(ui, NULL, "checkbox-box", on ? UI_BOX_SELECTED : 0);
+        mark->icon = on ? ICON_CHECK : ICON_NONE;
+        ui_label(ui, label, "checkbox-label");
+        ui_box_end(ui); /* checkbox */
+
+        sig = ui_signal(ui, row);
+        if(!value) return 0;
+        if(sig.clicked || s_take_key(ui, row->key, ' ', 0)) {
+                *value = !on;
+                ui->changed = 1;
                 return 1;
         }
         return 0;
 }
 
-PUB void ui_menu_separator(Ui *ui)
+PUB s32 ui_radio(UI *ui, const char *label, s32 *value, s32 option,
+                const char *cls)
 {
-        ui_box(ui, NULL, "menu-separator", 0);
+        UIBox *row;
+        UIBox *dot;
+        UISignal sig;
+        s32 on = value && *value == option;
+
+        row = ui_box_begin(ui, label, cls ? cls : "radio",
+                        UI_BOX_CLICKABLE | UI_BOX_FOCUSABLE |
+                        (on ? UI_BOX_SELECTED : 0));
+        row->cursor = UI_CURSOR_POINTER;
+        dot = ui_box(ui, NULL, "radio-dot", on ? UI_BOX_SELECTED : 0);
+        dot->icon = on ? ICON_DOT : ICON_NONE;
+        ui_label(ui, label, "radio-label");
+        ui_box_end(ui); /* radio */
+
+        sig = ui_signal(ui, row);
+        if(!value || on) return 0;
+        if(sig.clicked || s_take_key(ui, row->key, ' ', 0)) {
+                *value = option;
+                ui->changed = 1;
+                return 1;
+        }
+        return 0;
 }
 
-PUB void ui_menu_end(Ui *ui)
+PUB s32 ui_slider(UI *ui, const char *id, f32 *value, f32 min, f32 max,
+                const char *cls)
 {
-        ui_box_end(ui);
-        ui_pop_id(ui);
+        UIBox *box;
+        UIBox *track;
+        UIBox *fill;
+        UIBox *thumb;
+        UISignal sig;
+        UIStyle ts;
+        f32 thumb_w = SLIDER_THUMB;
+        f32 range = max - min;
+        f32 old = *value;
+        f32 step;
+        f32 w = 0.0f;
+        f32 t;
+        s32 lit;
+        s32 shift;
+
+        box = ui_box_begin(ui, id, cls ? cls : "slider",
+                        UI_BOX_CLICKABLE | UI_BOX_FOCUSABLE);
+        box->style.layout = UI_LAYOUT_STACK;
+        box->style.align_x = UI_ALIGN_START;
+        box->style.align_y = UI_ALIGN_CENTER;
+        box->cursor = UI_CURSOR_POINTER;
+        sig = ui_signal(ui, box);
+
+        ts = ui_theme_style(ui->theme, "slider-thumb", 0);
+        if(ts.width.kind == UI_SIZE_PIXELS) thumb_w = ts.width.value;
+
+        /* Travel of the thumb's left edge, from last frame's rect */
+        if(box->state) {
+                w = box->state->rect.w - box->style.padding[UI_LEFT] -
+                        box->style.padding[UI_RIGHT] - thumb_w;
+                if(box->state->rect.w <= 0.0f) ui->changed = 1;
+        }
+        if(w < 0.0f) w = 0.0f;
+
+        /* Mouse: the thumb's center follows the pointer */
+        if(ui->active == box->key && ui->input->button_down[UI_MOUSE_LEFT] &&
+           w > 0.0f) {
+                t = (sig.mouse_x - box->style.padding[UI_LEFT] -
+                     thumb_w * 0.5f) / w;
+                *value = min + s_clampf(t, 0.0f, 1.0f) * range;
+        }
+
+        /* Keys */
+        for(shift = 0; shift < 2; shift++) {
+                u16 mods = shift ? UI_MOD_SHIFT : 0;
+
+                step = range / (shift ? 10.0f : 100.0f);
+                while(s_take_key(ui, box->key, UI_KEY_LEFT, mods) ||
+                      s_take_key(ui, box->key, UI_KEY_DOWN, mods))
+                        *value -= step;
+                while(s_take_key(ui, box->key, UI_KEY_RIGHT, mods) ||
+                      s_take_key(ui, box->key, UI_KEY_UP, mods))
+                        *value += step;
+        }
+        if(s_take_key(ui, box->key, UI_KEY_HOME, 0)) *value = min;
+        if(s_take_key(ui, box->key, UI_KEY_END, 0)) *value = max;
+
+        if(range > 0.0f) {
+                *value = s_clampf(*value, min, max);
+        } else {
+                *value = min;
+        }
+        t = range > 0.0f ? (*value - min) / range : 0.0f;
+
+        track = ui_box(ui, NULL, "slider-track", 0);
+        track->style.width = ui_grow(1.0f);
+        ui_sides4(track->style.margin, thumb_w * 0.5f, 0.0f,
+                        thumb_w * 0.5f, 0.0f);
+
+        fill = ui_box(ui, NULL, "slider-fill", 0);
+        fill->style.width = ui_px(t * w);
+        fill->style.margin[UI_LEFT] = thumb_w * 0.5f;
+
+        lit = ui->hot == box->key || ui->active == box->key ||
+                ui->focus == box->key;
+        thumb = ui_box(ui, NULL, "slider-thumb", lit ? UI_BOX_SELECTED : 0);
+        thumb->style.width = ui_px(thumb_w);
+        thumb->style.margin[UI_LEFT] = t * w;
+        ui_box_end(ui); /* slider */
+
+        if(*value != old) {
+                ui->changed = 1;
+                return 1;
+        }
+        return 0;
+}
+
+PUB void ui_progress(UI *ui, const char *id, f32 value, const char *cls)
+{
+        UIBox *box;
+        UIBox *fill;
+        f32 w;
+        f32 len;
+        f32 phase;
+
+        box = ui_box_begin(ui, id, cls ? cls : "progress", 0);
+        box->style.layout = UI_LAYOUT_ROW;
+        box->style.overflow = UI_OVERFLOW_CLIP;
+
+        fill = ui_box(ui, NULL, "progress-fill", 0);
+        fill->style.height = ui_grow(1.0f);
+        if(value >= 0.0f) {
+                fill->style.width = ui_pct(s_clampf(value, 0.0f, 1.0f));
+        } else {
+                /* A third of the bar sweeping across, every 1.5 s */
+                w = box->state ? box->state->rect.w : 0.0f;
+                len = w * 0.3f;
+                phase = (f32)fmod(ui->time, 1.5) / 1.5f;
+                fill->style.width = ui_px(len);
+                fill->style.margin[UI_LEFT] = phase * (w + len) - len;
+                ui->changed = 1;
+        }
+        ui_box_end(ui); /* progress */
+}
+
+PUB s32 ui_dropdown(UI *ui, const char *id, s32 *selected,
+                const char *const *items, s32 count, const char *cls)
+{
+        UIBox *box;
+        UIBox *label;
+        UIBox *menu;
+        UISignal sig;
+        u64 key = ui_key(ui, id);
+        s32 open = ui_popup_is_open(ui, key);
+        s32 cur = *selected;
+        s32 toggle = 0;
+        s32 i;
+
+        box = ui_box_begin(ui, id, cls ? cls : "dropdown",
+                        UI_BOX_CLICKABLE | UI_BOX_FOCUSABLE |
+                        (open ? UI_BOX_SELECTED : 0));
+        box->cursor = UI_CURSOR_POINTER;
+        label = ui_label(ui, cur >= 0 && cur < count ? items[cur] : "",
+                        "dropdown-label");
+        label->style.width = ui_grow(1.0f);
+        ui_icon(ui, ICON_CHEVRON_DOWN, "dropdown-chevron");
+        ui_box_end(ui); /* dropdown */
+
+        sig = ui_signal(ui, box);
+        if(sig.pressed) toggle = 1;
+
+        if(open) {
+                /* Arrows pick right away, like a native select */
+                while(s_take_key(ui, box->key, UI_KEY_UP, 0)) {
+                        if(*selected > 0) (*selected)--;
+                }
+                while(s_take_key(ui, box->key, UI_KEY_DOWN, 0)) {
+                        if(*selected < count - 1) (*selected)++;
+                }
+                if(s_take_key(ui, box->key, UI_KEY_ENTER, 0) ||
+                   s_take_key(ui, box->key, ' ', 0))
+                        toggle = 1;
+        } else if(s_take_key(ui, box->key, UI_KEY_ENTER, 0) ||
+                  s_take_key(ui, box->key, ' ', 0) ||
+                  s_take_key(ui, box->key, UI_KEY_DOWN, 0)) {
+                toggle = 1;
+        }
+
+        if(toggle && box->state) {
+                if(open) {
+                        ui_popup_close(ui);
+                } else {
+                        ui_popup_open(ui, key, box->state->rect.x,
+                                        box->state->rect.y +
+                                        box->state->rect.h + 2.0f);
+                }
+        }
+
+        if(ui_menu_begin(ui, key)) {
+                menu = ui_parent(ui);
+                if(box->state) menu->style.width.min = box->state->rect.w;
+                for(i = 0; i < count; i++) {
+                        ui_push_id(ui, (u64)i);
+                        if(s_menu_item(ui, "item", items[i], NULL,
+                                                i == *selected)) {
+                                *selected = i;
+                        }
+                        ui_pop_id(ui);
+                }
+                ui_menu_end(ui);
+        }
+
+        if(*selected != cur) {
+                ui->changed = 1;
+                return 1;
+        }
+        return 0;
+}
+
+PUB UIBox *ui_badge(UI *ui, const char *text, const char *cls)
+{
+        return ui_label(ui, text, cls ? cls : "badge");
+}
+
+PUB UITreeRowResult ui_tree_row(UI *ui, const char *id, const char *label,
+                u16 icon, s32 depth, s32 has_children, s32 *expanded,
+                s32 selected, const char *cls)
+{
+        UITreeRowResult res;
+        UIBox *row;
+        UIBox *chevron;
+        s32 open = expanded && *expanded;
+
+        memset(&res, 0, sizeof(res));
+
+        row = ui_box_begin(ui, id, cls ? cls : "tree-row", UI_BOX_CLICKABLE |
+                        (selected ? UI_BOX_SELECTED : 0));
+        row->style.width = ui_grow(1.0f);
+        row->style.padding[UI_LEFT] += (f32)(depth > 0 ? depth : 0) *
+                TREE_INDENT;
+        row->cursor = UI_CURSOR_POINTER;
+
+        /* Leaves keep the space, so labels line up */
+        chevron = ui_box(ui, NULL, "tree-chevron", 0);
+        if(has_children)
+                chevron->icon = open ? ICON_CHEVRON_DOWN : ICON_CHEVRON_RIGHT;
+        if(icon) ui_icon(ui, icon, "tree-icon");
+        ui_label(ui, label, selected ? "tree-label.selected" : "tree-label");
+        ui_box_end(ui); /* tree-row */
+
+        res.sig = ui_signal(ui, row);
+        if(has_children && expanded && res.sig.clicked) {
+                *expanded = !open;
+                res.toggled = 1;
+                ui->changed = 1;
+        }
+        return res;
+}
+
+PUB UIList ui_list_begin(UI *ui, const char *id, s32 count, f32 row_height,
+                const char *cls)
+{
+        UIList list;
+        UIBoxState *st;
+        f32 scroll = 0.0f;
+        f32 view;
+        f32 max;
+
+        memset(&list, 0, sizeof(list));
+        if(count < 0) count = 0;
+        if(row_height < 1.0f) row_height = 1.0f;
+
+        list.box = ui_scroll_begin(ui, id, cls ? cls : "list");
+        list.box->style.layout = UI_LAYOUT_COLUMN;
+        list.box->style.gap = 0.0f;
+        list.count = count;
+        list.row_height = row_height;
+
+        /* Visible range from last frame; the first frame assumes a full
+           window so it doesn't come up empty */
+        st = list.box->state;
+        view = st && st->view[1] > 0.0f ? st->view[1] : ui->height;
+        if(st) scroll = st->scroll[1];
+        max = (f32)count * row_height - view;
+        if(scroll > max) scroll = max;
+        if(scroll < 0.0f) scroll = 0.0f;
+
+        list.first = (s32)(scroll / row_height);
+        list.last = (s32)ceilf((scroll + view) / row_height);
+        if(list.first > count) list.first = count;
+        if(list.last > count) list.last = count;
+
+        if(list.first > 0)
+                ui_spacer(ui, ui_px(0.0f), ui_px((f32)list.first * row_height));
+        return list;
+}
+
+PUB void ui_list_end(UI *ui, UIList *list)
+{
+        if(list->last < list->count) {
+                ui_spacer(ui, ui_px(0.0f), ui_px((f32)(list->count -
+                                                list->last) *
+                                        list->row_height));
+        }
+        ui_scroll_end(ui);
+}
+
+PUB void ui_list_scroll_to(UI *ui, UIList *list, s32 index)
+{
+        UIBoxState *st = list->box ? list->box->state : NULL;
+        f32 top;
+        f32 bottom;
+
+        if(!st || index < 0 || index >= list->count) return;
+
+        top = (f32)index * list->row_height;
+        bottom = top + list->row_height;
+        if(top < st->scroll[1]) {
+                st->scroll[1] = top;
+        } else if(bottom > st->scroll[1] + st->view[1]) {
+                st->scroll[1] = bottom - st->view[1];
+        } else {
+                return;
+        }
+        ui->changed = 1;
+}
+
+PUB void ui_toast(UI *ui, s32 kind, const char *text)
+{
+        UIToast *t;
+
+        if(!text) return;
+        if(ui->toast_count == UI_MAX_TOASTS) s_toast_remove(ui, 0);
+
+        t = &ui->toasts[ui->toast_count++];
+        memset(t, 0, sizeof(*t));
+        t->id = ++ui->toast_next_id;
+        t->kind = (u8)kind;
+        t->start = -1.0;
+        snprintf(t->text, sizeof(t->text), "%s", text);
+        ui->changed = 1;
+}
+
+PUB void ui_toasts(UI *ui, f32 bottom)
+{
+        static const u16 icons[3] = {ICON_INFO, ICON_WARNING, ICON_ERROR};
+        static const char *icon_cls[3] = {
+                "toast-icon.info", "toast-icon.warning", "toast-icon.error"
+        };
+        UIBox *area;
+        UIBox *toast;
+        UIToast *t;
+        u32 closed[UI_MAX_TOASTS];
+        s32 n_closed = 0;
+        s32 kind;
+        s32 i;
+        s32 j;
+
+        /* Expire the old ones */
+        for(i = 0; i < ui->toast_count;) {
+                t = &ui->toasts[i];
+                if(t->start < 0.0) t->start = ui->time;
+                if(ui->time - t->start >= UI_TOAST_TIME) {
+                        s_toast_remove(ui, i);
+                        ui->changed = 1;
+                } else {
+                        i++;
+                }
+        }
+        if(ui->toast_count == 0) return;
+
+        /* A window-sized column that only aligns; it takes no input */
+        ui_layer_begin(ui, UI_LAYER_OVERLAY);
+        area = ui_box_begin(ui, "toasts", "toasts", 0);
+        area->style.width = ui_grow(1.0f);
+        area->style.height = ui_grow(1.0f);
+        area->style.layout = UI_LAYOUT_COLUMN;
+        area->style.align_x = UI_ALIGN_END;
+        area->style.align_y = UI_ALIGN_END;
+        ui_sides4(area->style.padding, TOAST_MARGIN, TOAST_MARGIN,
+                        TOAST_MARGIN, TOAST_MARGIN + bottom);
+
+        for(i = 0; i < ui->toast_count; i++) {
+                t = &ui->toasts[i];
+                kind = t->kind <= UI_TOAST_ERROR ? t->kind : UI_TOAST_INFO;
+
+                ui_push_id(ui, (u64)t->id);
+                toast = ui_box_begin(ui, "toast", "toast", UI_BOX_CLICKABLE);
+                ui_icon(ui, icons[kind], icon_cls[kind]);
+                ui_label(ui, t->text, "toast-text");
+                if(ui_icon_button(ui, "close", ICON_CLOSE, NULL,
+                                        NULL).clicked)
+                        closed[n_closed++] = t->id;
+                ui_box_end(ui); /* toast */
+                ui_pop_id(ui);
+
+                /* Hovering keeps it */
+                if(toast->state && ui->input && ui_rect_contains(
+                                        toast->state->clip,
+                                        ui->input->mouse_x,
+                                        ui->input->mouse_y))
+                        t->start = ui->time;
+                ui_request_wakeup(ui, t->start + UI_TOAST_TIME);
+        }
+        ui_box_end(ui); /* toasts */
         ui_layer_end(ui);
+
+        for(j = 0; j < n_closed; j++) {
+                for(i = 0; i < ui->toast_count; i++) {
+                        if(ui->toasts[i].id == closed[j]) {
+                                s_toast_remove(ui, i);
+                                ui->changed = 1;
+                                break;
+                        }
+                }
+        }
 }
 
 /******************************************************************************
@@ -282,11 +721,11 @@ PUB void ui_menu_end(Ui *ui)
  * A draggable thumb along axis a, from last frame's scroll numbers. It is a
  * floating child of the area, so scrolling doesn't move it.
  */
-LOC void s_scrollbar(Ui *ui, UiBox *area, s32 a)
+LOC void s_scrollbar(UI *ui, UIBox *area, s32 a)
 {
-        UiBoxState *st = area->state;
-        UiBox *thumb;
-        UiSignal sig;
+        UIBoxState *st = area->state;
+        UIBox *thumb;
+        UISignal sig;
         f32 view = st->view[a];
         f32 content = st->content[a];
         f32 track;
@@ -298,8 +737,8 @@ LOC void s_scrollbar(Ui *ui, UiBox *area, s32 a)
         f32 size = SCROLLBAR_SIZE;
         const char *cls = "scrollbar-thumb";
         const char *own;
-        const UiSize *thick;
-        UiStyle style;
+        const UISize *thick;
+        UIStyle style;
 
         if(content <= view + 0.5f || view <= 0.0f) return;
 
@@ -351,4 +790,57 @@ LOC void s_scrollbar(Ui *ui, UiBox *area, s32 a)
                 if(st->scroll[a] > range) st->scroll[a] = range;
                 ui->changed = 1;
         }
+}
+
+LOC s32 s_menu_item(UI *ui, const char *id, const char *label,
+                const char *shortcut, s32 selected)
+{
+        UIBox *item;
+        UIBox *text;
+        UISignal sig;
+
+        item = ui_box_begin(ui, id, "menu-item", UI_BOX_CLICKABLE |
+                        (selected ? UI_BOX_SELECTED : 0));
+        text = ui_label(ui, label, "menu-item-label");
+        text->style.width = ui_grow(1.0f);
+        if(shortcut) ui_label(ui, shortcut, "menu-item-shortcut");
+        ui_box_end(ui); /* menu-item */
+
+        sig = ui_signal(ui, item);
+        if(sig.clicked) {
+                ui_popup_close(ui);
+                return 1;
+        }
+        return 0;
+}
+
+/* Take one unhandled key press if the box with key has focus */
+LOC s32 s_take_key(UI *ui, u64 key, u32 k, u16 mods)
+{
+        UIInput *in = ui->input;
+        s32 i;
+
+        if(!in || !key || ui->focus != key) return 0;
+        for(i = 0; i < in->event_count; i++) {
+                if(ui_event_is_key(&in->events[i], k, UI_SCAN_NONE, mods)) {
+                        in->events[i].consumed = 1;
+                        return 1;
+                }
+        }
+        return 0;
+}
+
+LOC void s_toast_remove(UI *ui, s32 i)
+{
+        if(i < 0 || i >= ui->toast_count) return;
+        memmove(&ui->toasts[i], &ui->toasts[i + 1],
+                        sizeof(UIToast) * (size_t)(ui->toast_count - i - 1));
+        ui->toast_count--;
+}
+
+LOC f32 s_clampf(f32 v, f32 lo, f32 hi)
+{
+        if(v < lo) return lo;
+        if(v > hi) return hi;
+        return v;
 }

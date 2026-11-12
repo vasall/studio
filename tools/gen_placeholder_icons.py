@@ -7,7 +7,9 @@ as <name>_16.png and <name>_32.png into assets/icons/. Only the standard
 library is used. Replace the files with your own icon set at any time, the
 names have to stay the same (see include/render/icons.h).
 
-Usage: python3 tools/gen_placeholder_icons.py [output_dir]
+Usage: python3 tools/gen_placeholder_icons.py [output_dir] [name...]
+
+With names, only those icons are written (so replaced icons are kept).
 """
 
 import math
@@ -160,6 +162,24 @@ def icon_cube(x, y):
     return stroke(d, 1.0)
 
 
+def icon_check(x, y):
+    return union(stroke(seg(x, y, 3.5, 8.5, 6.5, 11.5), 1.6), stroke(seg(x, y, 6.5, 11.5, 12.5, 4.5), 1.6))
+
+
+def icon_folder(x, y):
+    body = outline_box(x, y, 1.5, 4.5, 14.5, 13.5)
+    tab = union(stroke(seg(x, y, 2, 3, 6, 3), 1.0), stroke(seg(x, y, 6, 3, 7.5, 4.8), 1.0))
+    return union(body, tab)
+
+
+def icon_file(x, y):
+    d = min(seg(x, y, 3.5, 1.5, 9.5, 1.5), seg(x, y, 9.5, 1.5, 12.5, 4.5),
+            seg(x, y, 12.5, 4.5, 12.5, 14.5), seg(x, y, 12.5, 14.5, 3.5, 14.5),
+            seg(x, y, 3.5, 14.5, 3.5, 1.5), seg(x, y, 9.5, 1.5, 9.5, 4.5),
+            seg(x, y, 9.5, 4.5, 12.5, 4.5))
+    return stroke(d, 1.0)
+
+
 ICONS = {
     "close": icon_close,
     "dot": icon_dot,
@@ -179,6 +199,9 @@ ICONS = {
     "layout_panel": icon_layout_panel,
     "add": icon_add,
     "cube": icon_cube,
+    "check": icon_check,
+    "folder": icon_folder,
+    "file": icon_file,
 }
 
 
@@ -223,11 +246,16 @@ def write_png(path, size, rows):
 def main():
     here = os.path.dirname(os.path.abspath(__file__))
     out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(here, "..", "assets", "icons")
+    only = set(sys.argv[2:])
     os.makedirs(out, exist_ok=True)
+    count = 0
     for name, fn in ICONS.items():
+        if only and name not in only:
+            continue
+        count += 1
         for size in (16, 32):
             write_png(os.path.join(out, "%s_%d.png" % (name, size)), size, render(fn, size))
-    print("wrote %d icons to %s" % (len(ICONS), os.path.normpath(out)))
+    print("wrote %d icons to %s" % (count, os.path.normpath(out)))
 
 
 if __name__ == "__main__":

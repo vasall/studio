@@ -8,9 +8,9 @@
  *
  ******************************************************************************/
 
-PUB UiSize ui_fit(void)
+PUB UISize ui_fit(void)
 {
-        UiSize s;
+        UISize s;
 
         s.kind = UI_SIZE_FIT;
         s.value = 0.0f;
@@ -19,36 +19,36 @@ PUB UiSize ui_fit(void)
         return s;
 }
 
-PUB UiSize ui_px(f32 px)
+PUB UISize ui_px(f32 px)
 {
-        UiSize s = ui_fit();
+        UISize s = ui_fit();
 
         s.kind = UI_SIZE_PIXELS;
         s.value = px;
         return s;
 }
 
-PUB UiSize ui_pct(f32 pct)
+PUB UISize ui_pct(f32 pct)
 {
-        UiSize s = ui_fit();
+        UISize s = ui_fit();
 
         s.kind = UI_SIZE_PERCENT;
         s.value = pct;
         return s;
 }
 
-PUB UiSize ui_grow(f32 weight)
+PUB UISize ui_grow(f32 weight)
 {
-        UiSize s = ui_fit();
+        UISize s = ui_fit();
 
         s.kind = UI_SIZE_GROW;
         s.value = weight;
         return s;
 }
 
-PUB UiColor ui_rgba(u8 r, u8 g, u8 b, u8 a)
+PUB UIColor ui_rgba(u8 r, u8 g, u8 b, u8 a)
 {
-        UiColor c;
+        UIColor c;
 
         c.r = r;
         c.g = g;
@@ -57,20 +57,20 @@ PUB UiColor ui_rgba(u8 r, u8 g, u8 b, u8 a)
         return c;
 }
 
-PUB UiColor ui_hex(u32 rrggbbaa)
+PUB UIColor ui_hex(u32 rrggbbaa)
 {
         return ui_rgba((u8)(rrggbbaa >> 24), (u8)(rrggbbaa >> 16),
                         (u8)(rrggbbaa >> 8), (u8)rrggbbaa);
 }
 
-PUB UiColor ui_color_none(void)
+PUB UIColor ui_color_none(void)
 {
         return ui_rgba(0, 0, 0, 0);
 }
 
-PUB UiRect ui_rect(f32 x, f32 y, f32 w, f32 h)
+PUB UIRect ui_rect(f32 x, f32 y, f32 w, f32 h)
 {
-        UiRect r;
+        UIRect r;
 
         r.x = x;
         r.y = y;
@@ -79,7 +79,7 @@ PUB UiRect ui_rect(f32 x, f32 y, f32 w, f32 h)
         return r;
 }
 
-PUB UiRect ui_rect_intersect(UiRect a, UiRect b)
+PUB UIRect ui_rect_intersect(UIRect a, UIRect b)
 {
         f32 x0 = a.x > b.x ? a.x : b.x;
         f32 y0 = a.y > b.y ? a.y : b.y;
@@ -91,7 +91,7 @@ PUB UiRect ui_rect_intersect(UiRect a, UiRect b)
         return ui_rect(x0, y0, x1 - x0, y1 - y0);
 }
 
-PUB s32 ui_rect_contains(UiRect r, f32 x, f32 y)
+PUB s32 ui_rect_contains(UIRect r, f32 x, f32 y)
 {
         return x >= r.x && y >= r.y && x < r.x + r.w && y < r.y + r.h;
 }
@@ -122,9 +122,9 @@ PUB void ui_radius4(f32 out[4], f32 tl, f32 tr, f32 br, f32 bl)
         out[UI_BOTTOM_LEFT] = bl;
 }
 
-PUB UiStyle ui_style_default(void)
+PUB UIStyle ui_style_default(void)
 {
-        UiStyle s;
+        UIStyle s;
 
         memset(&s, 0, sizeof(s));
         s.width = ui_fit();
@@ -136,7 +136,7 @@ PUB UiStyle ui_style_default(void)
         return s;
 }
 
-PUB void ui_style_apply(UiStyle *dst, const UiStyle *src, u32 mask)
+PUB void ui_style_apply(UIStyle *dst, const UIStyle *src, u32 mask)
 {
         if(mask & UI_FIELD_WIDTH) dst->width = src->width;
         if(mask & UI_FIELD_HEIGHT) dst->height = src->height;

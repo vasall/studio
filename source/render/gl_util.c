@@ -2,6 +2,8 @@
 
 #include <devkit/log/log.h>
 
+#include <core/file.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -19,36 +21,6 @@ LOC GLuint s_compile(GLenum type, const char *src, const char *name);
  *
  ******************************************************************************/
 
-PUB char *gl_read_file(const char *path, s64 *size_out)
-{
-        FILE *fp;
-        long size;
-        char *buf;
-
-        fp = fopen(path, "rb");
-        if(!fp) {
-                LOG_S(LOG_ERROR, "can't open %s", (char *)path);
-                return NULL;
-        }
-
-        fseek(fp, 0, SEEK_END);
-        size = ftell(fp);
-        fseek(fp, 0, SEEK_SET);
-        if(size < 0) {
-                fclose(fp);
-                return NULL;
-        }
-
-        buf = malloc((size_t)size + 1);
-        if(buf) {
-                size = (long)fread(buf, 1, (size_t)size, fp);
-                buf[size] = '\0';
-                if(size_out) *size_out = size;
-        }
-        fclose(fp);
-        return buf;
-}
-
 PUB GLuint gl_program_from_files(const char *vert_path, const char *frag_path)
 {
         char *vs_src;
@@ -59,8 +31,8 @@ PUB GLuint gl_program_from_files(const char *vert_path, const char *frag_path)
         GLint ok;
         char log[1024];
 
-        vs_src = gl_read_file(vert_path, NULL);
-        fs_src = gl_read_file(frag_path, NULL);
+        vs_src = file_read(vert_path, NULL);
+        fs_src = file_read(frag_path, NULL);
         if(!vs_src || !fs_src) goto out;
 
         vs = s_compile(GL_VERTEX_SHADER, vs_src, vert_path);

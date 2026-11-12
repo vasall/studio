@@ -3,6 +3,12 @@
 #include <platform/app.h>
 #include <workbench/shell.h>
 
+#include <core/path.h>
+
+#include <stdio.h>
+
+#define APP_TITLE "Vasall Studio"
+
 int main(void)
 {
         App app;
@@ -14,8 +20,7 @@ int main(void)
                 return 1;
         }
 
-        win = app_window_open(&app, "Vasall Studio", 1400, 860,
-                        workbench_frame, &wb);
+        win = app_window_open(&app, APP_TITLE, 1400, 860, workbench_frame, &wb);
         if(!win) {
                 app_deinit(&app);
                 return 1;

@@ -40,12 +40,14 @@ struct AppWindow {
         f32 width;              /* Size in logical pixels */
         f32 height;
 
-        UiInput input;
-        Ui ui;
+        UIInput input;
+        UI ui;
 
         s32 needs_frame;        /* Draw at the next loop iteration */
         s32 frame_sources;      /* While > 0, draw continuously */
         s32 is_main;
+        s32 text_input_on;      /* SDL text input started for this window */
+        SDL_Rect text_input_area;
 
         AppFrameFn frame_fn;
         void *frame_user;
@@ -58,7 +60,7 @@ struct App {
         SDL_GLContext gl;         /* Shared by all windows */
 
         Draw2D draw;
-        UiTheme theme;
+        UITheme theme;
         char asset_dir[512];
 
         List windows;           /* AppWindow * */

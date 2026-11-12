@@ -20,8 +20,8 @@ LOC s32 s_button(u8 sdl_button);
 
 PUB s32 app_input_event(AppWindow *win, const SDL_Event *ev)
 {
-        UiInput *in = &win->input;
-        UiEvent ue;
+        UIInput *in = &win->input;
+        UIEvent ue;
         s32 b;
         s32 i;
 

@@ -27,7 +27,10 @@ LOC const char *s_names[ICON_COUNT] = {"",
                                        "layout_sidebar",
                                        "layout_panel",
                                        "add",
-                                       "cube"};
+                                       "cube",
+                                       "check",
+                                       "folder",
+                                       "file"};
 
 #define ICON_KEY_ID 0xffULL
 

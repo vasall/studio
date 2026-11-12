@@ -9,9 +9,9 @@
  * Layout tests with a fake font: every byte is 8 px wide, lines are 16 px.
  */
 
-LOC Ui s_ui;
-LOC UiTheme s_theme;
-LOC UiInput s_input;
+LOC UI s_ui;
+LOC UITheme s_theme;
+LOC UIInput s_input;
 
 LOC f32 s_measure(void *user, u8 font, f32 size, const char *text, s32 len)
 {
@@ -45,9 +45,9 @@ void tearDown(void)
 }
 
 /* A container box filling the window, as base for the tests */
-LOC UiBox *s_container(u8 layout)
+LOC UIBox *s_container(u8 layout)
 {
-        UiBox *box = ui_box_begin(&s_ui, "container", NULL, 0);
+        UIBox *box = ui_box_begin(&s_ui, "container", NULL, 0);
 
         box->style.width = ui_grow(1.0f);
         box->style.height = ui_grow(1.0f);
@@ -55,9 +55,9 @@ LOC UiBox *s_container(u8 layout)
         return box;
 }
 
-LOC UiBox *s_child(const char *id, UiSize w, UiSize h)
+LOC UIBox *s_child(const char *id, UISize w, UISize h)
 {
-        UiBox *box = ui_box(&s_ui, id, NULL, 0);
+        UIBox *box = ui_box(&s_ui, id, NULL, 0);
 
         box->style.width = w;
         box->style.height = h;
@@ -66,7 +66,7 @@ LOC UiBox *s_child(const char *id, UiSize w, UiSize h)
 
 LOC void s_finish(void)
 {
-        while(s_ui.depth > 1) ui_box_end(&s_ui);
+        while(s_ui.depth > 1) ui_box_end(&s_ui); /* all boxes up to the root */
         ui_end_frame(&s_ui);
 }
 
@@ -79,8 +79,8 @@ LOC void s_finish(void)
 
 void test_fixed_sizes_in_row(void)
 {
-        UiBox *a;
-        UiBox *b;
+        UIBox *a;
+        UIBox *b;
 
         s_container(UI_LAYOUT_ROW);
         a = s_child("a", ui_px(100), ui_px(50));
@@ -93,9 +93,9 @@ void test_fixed_sizes_in_row(void)
 
 void test_column_with_gap_and_padding(void)
 {
-        UiBox *c;
-        UiBox *a;
-        UiBox *b;
+        UIBox *c;
+        UIBox *a;
+        UIBox *b;
 
         c = s_container(UI_LAYOUT_COLUMN);
         c->style.gap = 10.0f;
@@ -110,9 +110,9 @@ void test_column_with_gap_and_padding(void)
 
 void test_grow_shares_free_space_by_weight(void)
 {
-        UiBox *a;
-        UiBox *b;
-        UiBox *c;
+        UIBox *a;
+        UIBox *b;
+        UIBox *c;
 
         s_container(UI_LAYOUT_ROW);
         a = s_child("a", ui_px(100), ui_px(10));
@@ -127,7 +127,7 @@ void test_grow_shares_free_space_by_weight(void)
 
 void test_grow_on_cross_axis_fills(void)
 {
-        UiBox *a;
+        UIBox *a;
 
         s_container(UI_LAYOUT_ROW);
         a = s_child("a", ui_px(10), ui_grow(1));
@@ -138,8 +138,8 @@ void test_grow_on_cross_axis_fills(void)
 
 void test_grow_respects_max(void)
 {
-        UiBox *a;
-        UiBox *b;
+        UIBox *a;
+        UIBox *b;
 
         s_container(UI_LAYOUT_ROW);
         a = s_child("a", ui_grow(1), ui_px(10));
@@ -153,8 +153,8 @@ void test_grow_respects_max(void)
 
 void test_percent_of_content_box(void)
 {
-        UiBox *c;
-        UiBox *a;
+        UIBox *c;
+        UIBox *a;
 
         c = s_container(UI_LAYOUT_ROW);
         ui_sides(c->style.padding, 50);
@@ -166,8 +166,8 @@ void test_percent_of_content_box(void)
 
 void test_fit_wraps_children_and_padding(void)
 {
-        UiBox *f;
-        UiBox *a;
+        UIBox *f;
+        UIBox *a;
 
         s_container(UI_LAYOUT_ROW);
         f = ui_box_begin(&s_ui, "fit", NULL, 0);
@@ -176,7 +176,7 @@ void test_fit_wraps_children_and_padding(void)
         ui_sides(f->style.padding, 2);
         s_child("a", ui_px(30), ui_px(10));
         a = s_child("b", ui_px(50), ui_px(10));
-        ui_box_end(&s_ui);
+        ui_box_end(&s_ui); /* fit */
         s_finish();
 
         ASSERT_RECT(f, 0, 0, 54, 28);
@@ -185,7 +185,7 @@ void test_fit_wraps_children_and_padding(void)
 
 void test_fit_text(void)
 {
-        UiBox *l;
+        UIBox *l;
 
         s_container(UI_LAYOUT_ROW);
         l = ui_label(&s_ui, "Hello##id", NULL);
@@ -198,8 +198,8 @@ void test_fit_text(void)
 
 void test_margins_add_space(void)
 {
-        UiBox *a;
-        UiBox *b;
+        UIBox *a;
+        UIBox *b;
 
         s_container(UI_LAYOUT_ROW);
         a = s_child("a", ui_px(10), ui_px(10));
@@ -213,9 +213,9 @@ void test_margins_add_space(void)
 
 void test_align_center_and_end(void)
 {
-        UiBox *c;
-        UiBox *a;
-        UiBox *b;
+        UIBox *c;
+        UIBox *a;
+        UIBox *b;
 
         c = s_container(UI_LAYOUT_ROW);
         c->style.align_x = UI_ALIGN_CENTER;
@@ -231,9 +231,9 @@ void test_align_center_and_end(void)
 
 void test_stack_aligns_each_child(void)
 {
-        UiBox *c;
-        UiBox *a;
-        UiBox *b;
+        UIBox *c;
+        UIBox *a;
+        UIBox *b;
 
         c = s_container(UI_LAYOUT_STACK);
         c->style.align_x = UI_ALIGN_CENTER;
@@ -248,9 +248,9 @@ void test_stack_aligns_each_child(void)
 
 void test_shrink_on_overflow_keeps_pixels(void)
 {
-        UiBox *a;
-        UiBox *b;
-        UiBox *c;
+        UIBox *a;
+        UIBox *b;
+        UIBox *c;
 
         s_container(UI_LAYOUT_ROW);
         a = s_child("a", ui_px(300), ui_px(10));
@@ -269,8 +269,8 @@ void test_shrink_on_overflow_keeps_pixels(void)
 
 void test_row_wrap_breaks_lines(void)
 {
-        UiBox *c;
-        UiBox *k[5];
+        UIBox *c;
+        UIBox *k[5];
         char id[2];
         s32 i;
 
@@ -294,9 +294,9 @@ void test_row_wrap_breaks_lines(void)
 
 void test_row_wrap_fit_height_and_grow_per_line(void)
 {
-        UiBox *w;
-        UiBox *a;
-        UiBox *g;
+        UIBox *w;
+        UIBox *a;
+        UIBox *g;
 
         s_container(UI_LAYOUT_COLUMN);
         w = ui_box_begin(&s_ui, "wrap", NULL, 0);
@@ -305,7 +305,7 @@ void test_row_wrap_fit_height_and_grow_per_line(void)
         s_child("a", ui_px(150), ui_px(20));
         a = s_child("b", ui_px(100), ui_px(30));
         g = s_child("g", ui_grow(1), ui_px(10));
-        ui_box_end(&s_ui);
+        ui_box_end(&s_ui); /* wrap */
         s_finish();
 
         /* Lines: [a] [b g]; g grows to the rest of its line */
@@ -316,8 +316,8 @@ void test_row_wrap_fit_height_and_grow_per_line(void)
 
 void test_scroll_offset_and_clamp(void)
 {
-        UiBox *s;
-        UiBox *a;
+        UIBox *s;
+        UIBox *a;
 
         s_container(UI_LAYOUT_COLUMN);
         s = ui_scroll_begin(&s_ui, "scroll", NULL);
@@ -338,9 +338,9 @@ void test_scroll_offset_and_clamp(void)
 
 void test_floating_child_is_out_of_flow(void)
 {
-        UiBox *a;
-        UiBox *f;
-        UiBox *b;
+        UIBox *a;
+        UIBox *f;
+        UIBox *b;
 
         s_container(UI_LAYOUT_ROW);
         a = s_child("a", ui_px(10), ui_px(10));
@@ -359,9 +359,9 @@ void test_floating_child_is_out_of_flow(void)
 
 void test_fit_parent_counts_grow_children(void)
 {
-        UiBox *menu;
-        UiBox *a;
-        UiBox *b;
+        UIBox *menu;
+        UIBox *a;
+        UIBox *b;
 
         s_container(UI_LAYOUT_STACK);
         menu = ui_box_begin(&s_ui, "menu", NULL, UI_BOX_FLOATING);
@@ -371,7 +371,7 @@ void test_fit_parent_counts_grow_children(void)
         a->style.width = ui_grow(1);
         b = ui_label(&s_ui, "A longer item", NULL);
         b->style.width = ui_grow(1);
-        ui_box_end(&s_ui);
+        ui_box_end(&s_ui); /* menu */
         s_finish();
 
         /* As wide as the widest item (13 * 8), items fill it */
@@ -382,8 +382,8 @@ void test_fit_parent_counts_grow_children(void)
 
 void test_scroll_children_do_not_shrink(void)
 {
-        UiBox *s;
-        UiBox *a;
+        UIBox *s;
+        UIBox *a;
 
         s_container(UI_LAYOUT_COLUMN);
         s = ui_scroll_begin(&s_ui, "tabs", NULL);

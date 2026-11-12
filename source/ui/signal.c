@@ -9,11 +9,11 @@
  *
  ******************************************************************************/
 
-PUB UiSignal ui_signal(Ui *ui, UiBox *box)
+PUB UISignal ui_signal(UI *ui, UIBox *box)
 {
-        UiSignal sig;
-        UiInput *in = ui->input;
-        UiBoxState *st;
+        UISignal sig;
+        UIInput *in = ui->input;
+        UIBoxState *st;
         f32 dx;
         f32 dy;
 

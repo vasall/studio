@@ -54,15 +54,15 @@ typedef struct Quad {
         f32 radius[4];
         f32 border;
         s32 mode;
-        UiColor color;
-        UiColor border_color;
+        UIColor color;
+        UIColor border_color;
 } Quad;
 
 LOC void s_push_quad(Draw2D *d, const Quad *q, GLuint tex, const s32 clip[4]);
-LOC void s_rect_cmd(Draw2D *d, const UiDrawCmd *cmd, f32 s, const s32 clip[4]);
-LOC void s_text_cmd(Draw2D *d, const UiDrawCmd *cmd, f32 s, const s32 clip[4]);
-LOC void s_icon_cmd(Draw2D *d, const UiDrawCmd *cmd, f32 s, const s32 clip[4]);
-LOC void s_image_cmd(Draw2D *d, const UiDrawCmd *cmd, f32 s, const s32 clip[4]);
+LOC void s_rect_cmd(Draw2D *d, const UIDrawCmd *cmd, f32 s, const s32 clip[4]);
+LOC void s_text_cmd(Draw2D *d, const UIDrawCmd *cmd, f32 s, const s32 clip[4]);
+LOC void s_icon_cmd(Draw2D *d, const UIDrawCmd *cmd, f32 s, const s32 clip[4]);
+LOC void s_image_cmd(Draw2D *d, const UIDrawCmd *cmd, f32 s, const s32 clip[4]);
 LOC void s_ensure_indices(Draw2D *d, s32 quads);
 LOC void s_setup_vao(Draw2D *d);
 
@@ -78,7 +78,8 @@ PUB s32 draw2d_init(Draw2D *d, const char *asset_dir)
         char fs[512];
         char path[512];
         static const char *font_files[UI_FONT_COUNT] = {
-                "fonts/inter/Inter-Regular.ttf", "fonts/inter/Inter-Medium.ttf",
+                "fonts/inter/Inter-Regular.ttf",
+                "fonts/inter/Inter-Medium.ttf",
                 "fonts/inter/Inter-SemiBold.ttf",
                 "fonts/jetbrains-mono/JetBrainsMono-Regular.ttf"};
         s32 i;
@@ -122,8 +123,10 @@ PUB void draw2d_deinit(Draw2D *d)
         if(d->program) glDeleteProgram(d->program);
 
         atlas_deinit(&d->atlas);
-        for(i = 0; i < UI_FONT_COUNT; i++)
+        for(i = 0; i < UI_FONT_COUNT; i++) {
                 font_unload(&d->fonts[i]);
+        }
+
         icons_unload(&d->icons);
         list_deinit(&d->verts);
         list_deinit(&d->batches);
@@ -132,7 +135,7 @@ PUB void draw2d_deinit(Draw2D *d)
 PUB void draw2d_render(Draw2D *d, List *cmds, f32 scale, s32 fb_w, s32 fb_h)
 {
         Draw2DBatch *b;
-        UiDrawCmd *cmd;
+        UIDrawCmd *cmd;
         s32 clip[4];
         s32 count = list_count(cmds);
         s32 i;
@@ -286,7 +289,7 @@ LOC void s_push_quad(Draw2D *d, const Quad *q, GLuint tex, const s32 clip[4])
         list_push(&d->verts, 4, v);
 }
 
-LOC void s_rect_cmd(Draw2D *d, const UiDrawCmd *cmd, f32 s, const s32 clip[4])
+LOC void s_rect_cmd(Draw2D *d, const UIDrawCmd *cmd, f32 s, const s32 clip[4])
 {
         Quad q;
         f32 max_r;
@@ -317,7 +320,7 @@ LOC void s_rect_cmd(Draw2D *d, const UiDrawCmd *cmd, f32 s, const s32 clip[4])
         s_push_quad(d, &q, d->atlas.texture, clip);
 }
 
-LOC void s_text_cmd(Draw2D *d, const UiDrawCmd *cmd, f32 s, const s32 clip[4])
+LOC void s_text_cmd(Draw2D *d, const UIDrawCmd *cmd, f32 s, const s32 clip[4])
 {
         Font *font;
         const AtlasEntry *g;
@@ -371,7 +374,7 @@ LOC void s_text_cmd(Draw2D *d, const UiDrawCmd *cmd, f32 s, const s32 clip[4])
         }
 }
 
-LOC void s_icon_cmd(Draw2D *d, const UiDrawCmd *cmd, f32 s, const s32 clip[4])
+LOC void s_icon_cmd(Draw2D *d, const UIDrawCmd *cmd, f32 s, const s32 clip[4])
 {
         const AtlasEntry *e;
         Quad q;
@@ -395,7 +398,7 @@ LOC void s_icon_cmd(Draw2D *d, const UiDrawCmd *cmd, f32 s, const s32 clip[4])
         s_push_quad(d, &q, d->atlas.texture, clip);
 }
 
-LOC void s_image_cmd(Draw2D *d, const UiDrawCmd *cmd, f32 s, const s32 clip[4])
+LOC void s_image_cmd(Draw2D *d, const UIDrawCmd *cmd, f32 s, const s32 clip[4])
 {
         Quad q;
 
@@ -450,6 +453,7 @@ LOC void s_ensure_indices(Draw2D *d, s32 quads)
 LOC void s_setup_vao(Draw2D *d)
 {
         GLsizei stride = sizeof(Draw2DVertex);
+        void *offset;
 
         glGenVertexArrays(1, &d->vao);
         glGenBuffers(1, &d->vbo);
@@ -460,29 +464,36 @@ LOC void s_setup_vao(Draw2D *d)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, d->ebo);
 
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride,
-                              (void *)offsetof(Draw2DVertex, x));
+        offset = (void *)offsetof(Draw2DVertex, x);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, offset);
+
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride,
-                              (void *)offsetof(Draw2DVertex, u));
+        offset = (void *)offsetof(Draw2DVertex, u);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride,offset);
+
         glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride,
-                              (void *)offsetof(Draw2DVertex, lx));
+        offset = (void *)offsetof(Draw2DVertex, lx);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, offset);
+
         glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, stride,
-                              (void *)offsetof(Draw2DVertex, hw));
+        offset = (void *)offsetof(Draw2DVertex, hw);
+        glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, stride, offset);
+
         glEnableVertexAttribArray(4);
-        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, stride,
-                              (void *)offsetof(Draw2DVertex, radius));
+        offset = (void *)offsetof(Draw2DVertex, radius);
+        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, stride, offset);
+
         glEnableVertexAttribArray(5);
-        glVertexAttribPointer(5, 2, GL_FLOAT, GL_FALSE, stride,
-                              (void *)offsetof(Draw2DVertex, border));
+        offset =(void *)offsetof(Draw2DVertex, border);
+        glVertexAttribPointer(5, 2, GL_FLOAT, GL_FALSE, stride, offset);
+
         glEnableVertexAttribArray(6);
-        glVertexAttribPointer(6, 4, GL_UNSIGNED_BYTE, GL_TRUE, stride,
-                              (void *)offsetof(Draw2DVertex, color));
+        offset = (void *)offsetof(Draw2DVertex, color);
+        glVertexAttribPointer(6, 4, GL_UNSIGNED_BYTE, GL_TRUE, stride, offset);
+
         glEnableVertexAttribArray(7);
-        glVertexAttribPointer(7, 4, GL_UNSIGNED_BYTE, GL_TRUE, stride,
-                              (void *)offsetof(Draw2DVertex, border_color));
+        offset = (void *)offsetof(Draw2DVertex, border_color);
+        glVertexAttribPointer(7, 4, GL_UNSIGNED_BYTE, GL_TRUE, stride, offset);
 
         glBindVertexArray(0);
 }

@@ -12,9 +12,9 @@
  *
  ******************************************************************************/
 
-LOC void s_draw(View *view, Ui *ui, UiBox *area);
+LOC void s_draw(View *view, UI *ui, UIBox *area);
 LOC u16 s_icon(View *view);
-LOC UiColor s_hue(u32 id);
+LOC UIColor s_hue(u32 id);
 
 const ViewClass dummy_view_class = {
         "dummy",
@@ -41,10 +41,10 @@ PUB ViewHandle dummy_view_create(Views *views, const char *title)
  *
  ******************************************************************************/
 
-LOC void s_draw(View *view, Ui *ui, UiBox *area)
+LOC void s_draw(View *view, UI *ui, UIBox *area)
 {
-        UiBox *stripe;
-        UiBox *card;
+        UIBox *stripe;
+        UIBox *card;
         char buf[64];
 
         (void)area;
@@ -59,8 +59,8 @@ LOC void s_draw(View *view, Ui *ui, UiBox *area)
         snprintf(buf, sizeof(buf), "Dummy view #%u", view->id);
         ui_label(ui, buf, "dummy-text");
         ui_label(ui, "Drag the tab to move or split", "dummy-hint");
-        ui_box_end(ui);
-        ui_box_end(ui);
+        ui_box_end(ui); /* dummy-card */
+        ui_box_end(ui); /* dummy-center */
 }
 
 LOC u16 s_icon(View *view)
@@ -70,7 +70,7 @@ LOC u16 s_icon(View *view)
 }
 
 /* A distinct, muted color per id (golden-angle hue steps) */
-LOC UiColor s_hue(u32 id)
+LOC UIColor s_hue(u32 id)
 {
         f32 h = fmodf((f32)id * 137.508f, 360.0f) / 60.0f;
         f32 s = 0.55f;

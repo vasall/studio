@@ -6,6 +6,7 @@
 #include <ui/debug.h>
 #include <ui/widgets.h>
 #include <workbench/dummy_view.h>
+#include <workbench/gallery_view.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -29,14 +30,14 @@ enum {
 
 LOC ViewHandle s_new_dummy(Workbench *wb);
 LOC ViewHandle s_clone(Dock *dock, ViewHandle view, void *user);
-LOC void s_shortcuts(Workbench *wb, Ui *ui);
-LOC void s_menubar(Workbench *wb, Ui *ui);
-LOC void s_menus(Workbench *wb, Ui *ui);
-LOC void s_activitybar(Workbench *wb, Ui *ui);
-LOC void s_sidebar(Workbench *wb, Ui *ui);
-LOC void s_panel(Workbench *wb, Ui *ui);
-LOC void s_statusbar(Workbench *wb, Ui *ui);
-LOC void s_placeholder(Ui *ui, const char *text);
+LOC void s_shortcuts(Workbench *wb, UI *ui);
+LOC void s_menubar(Workbench *wb, UI *ui);
+LOC void s_menus(Workbench *wb, UI *ui);
+LOC void s_activitybar(Workbench *wb, UI *ui);
+LOC void s_sidebar(Workbench *wb, UI *ui);
+LOC void s_panel(Workbench *wb, UI *ui);
+LOC void s_statusbar(Workbench *wb, UI *ui);
+LOC void s_placeholder(UI *ui, const char *text);
 
 /******************************************************************************
  *
@@ -60,18 +61,23 @@ PUB s32 workbench_init(Workbench *wb, AppWindow *win)
         wb->panel_height = 220.0f;
         wb->panel_tab = SHELL_PANEL_OUTPUT;
 
-        for(i = 0; i < MENU_COUNT; i++)
+        for(i = 0; i < MENU_COUNT; i++) {
                 wb->menu_keys[i] = hash_str(menu_names[i], HASH_SEED);
+        }
 
         if(views_init(&wb->views) < 0) return -1;
         if(dock_init(&wb->dock, &wb->views, s_clone, wb) < 0) return -1;
 
         /* Three tabs on the left, two in a group on the right */
-        for(i = 0; i < 3; i++)
+        for(i = 0; i < 3; i++) {
                 dock_open(&wb->dock, NULL, s_new_dummy(wb));
+        }
+
         right = dock_split(&wb->dock, wb->dock.active_group, DOCK_ZONE_RIGHT,
                         s_new_dummy(wb));
+
         dock_open(&wb->dock, right, s_new_dummy(wb));
+        dock_open(&wb->dock, right, gallery_view_create(&wb->views));
         return 0;
 }
 
@@ -84,15 +90,13 @@ PUB void workbench_deinit(Workbench *wb)
 PUB void workbench_frame(AppWindow *win, void *user)
 {
         Workbench *wb = user;
-        Ui *ui = &win->ui;
-        UiBox *root;
-        UiBox *main_row;
-        UiBox *center;
-        UiBox *editor;
+        UI *ui = &win->ui;
+        UIBox *root;
+        UIBox *main_row;
+        UIBox *center;
+        UIBox *editor;
         f32 delta;
         char info[96];
-
-        s_shortcuts(wb, ui);
 
         root = ui_box_begin(ui, "workbench", "workbench", 0);
         root->style.width = ui_grow(1.0f);
@@ -128,7 +132,7 @@ PUB void workbench_frame(AppWindow *win, void *user)
         editor->style.width.min = 120.0f;
         editor->style.height.min = 80.0f;
         dock_build(&wb->dock, ui);
-        ui_box_end(ui);
+        ui_box_end(ui); /* editor-area */
 
         if(wb->panel_visible) {
                 /* Dragging up makes the panel taller */
@@ -140,14 +144,18 @@ PUB void workbench_frame(AppWindow *win, void *user)
                         wb->panel_height = PANEL_MIN;
                 s_panel(wb, ui);
         }
-        ui_box_end(ui);
+        ui_box_end(ui); /* center */
 
-        ui_box_end(ui);
+        ui_box_end(ui); /* main */
 
         s_statusbar(wb, ui);
-        ui_box_end(ui);
+        ui_box_end(ui); /* workbench */
 
         s_menus(wb, ui);
+        ui_toasts(ui, 22.0f);
+
+        /* After building, so focused widgets (text fields) see keys first */
+        s_shortcuts(wb, ui);
 
         snprintf(info, sizeof(info), "frame %.2f ms  draw calls %d  quads %d",
                         win->frame_ms, win->app->draw.draw_calls,
@@ -169,21 +177,23 @@ LOC ViewHandle s_new_dummy(Workbench *wb)
         return dummy_view_create(&wb->views, title);
 }
 
-/* Split editor: dummies just get a fresh dummy with the same title */
+/* Split editor: a fresh view of the same kind */
 LOC ViewHandle s_clone(Dock *dock, ViewHandle view, void *user)
 {
         Workbench *wb = user;
         View *v = view_get(dock->views, view);
 
         if(!v) return view;
+        if(v->cls == &gallery_view_class)
+                return gallery_view_create(&wb->views);
         return dummy_view_create(&wb->views, v->title);
 }
 
 /* Keyboard shortcuts, until the command system (M7) exists */
-LOC void s_shortcuts(Workbench *wb, Ui *ui)
+LOC void s_shortcuts(Workbench *wb, UI *ui)
 {
-        UiInput *in = ui->input;
-        UiEvent *ev;
+        UIInput *in = ui->input;
+        UIEvent *ev;
         s32 i;
 
         for(i = 0; i < in->event_count; i++) {
@@ -216,15 +226,17 @@ LOC void s_shortcuts(Workbench *wb, Ui *ui)
         }
 }
 
-LOC void s_menubar(Workbench *wb, Ui *ui)
+LOC void s_menubar(Workbench *wb, UI *ui)
 {
         static const char *labels[MENU_COUNT] = {
-                "File##menubar", "Edit##menubar", "View##menubar",
+                "File##menubar",
+                "Edit##menubar",
+                "View##menubar",
                 "Help##menubar"
         };
-        UiBox *bar;
-        UiBox *item;
-        UiSignal sig;
+        UIBox *bar;
+        UIBox *item;
+        UISignal sig;
         s32 open = -1;
         s32 i;
 
@@ -260,10 +272,10 @@ LOC void s_menubar(Workbench *wb, Ui *ui)
         ui_spacer(ui, ui_grow(1.0f), ui_px(0.0f));
         ui_label(ui, "Vasall Studio", "menubar-title");
         ui_spacer(ui, ui_grow(1.0f), ui_px(0.0f));
-        ui_box_end(ui);
+        ui_box_end(ui); /* menubar */
 }
 
-LOC void s_menus(Workbench *wb, Ui *ui)
+LOC void s_menus(Workbench *wb, UI *ui)
 {
         if(ui_menu_begin(ui, wb->menu_keys[MENU_FILE])) {
                 if(ui_menu_item(ui, "New Dummy Tab", "Ctrl+N"))
@@ -297,6 +309,9 @@ LOC void s_menus(Workbench *wb, Ui *ui)
                 if(ui_menu_item(ui, "Split Editor Down", "Ctrl+Shift+\\"))
                         dock_split_active(&wb->dock, DOCK_ZONE_BOTTOM);
                 ui_menu_separator(ui);
+                if(ui_menu_item(ui, "Open UI Gallery", NULL))
+                        dock_open(&wb->dock, NULL,
+                                        gallery_view_create(&wb->views));
                 if(ui_menu_item(ui, "Toggle Debug Overlay", "F12"))
                         ui->debug = !ui->debug;
                 ui_menu_end(ui);
@@ -308,7 +323,7 @@ LOC void s_menus(Workbench *wb, Ui *ui)
         }
 }
 
-LOC void s_activitybar(Workbench *wb, Ui *ui)
+LOC void s_activitybar(Workbench *wb, UI *ui)
 {
         static const u16 icons[SHELL_ACTIVITY_COUNT] = {
                 ICON_FILES, ICON_SEARCH
@@ -316,9 +331,9 @@ LOC void s_activitybar(Workbench *wb, Ui *ui)
         static const char *tips[SHELL_ACTIVITY_COUNT] = {
                 "Explorer (Ctrl+B)", "Search"
         };
-        UiBox *bar;
-        UiBox *item;
-        UiSignal sig;
+        UIBox *bar;
+        UIBox *item;
+        UISignal sig;
         char id[16];
         s32 selected;
         s32 i;
@@ -354,13 +369,13 @@ LOC void s_activitybar(Workbench *wb, Ui *ui)
         item->icon = ICON_GEAR;
         ui_tooltip(ui, item, "Settings");
         ui_signal(ui, item);
-        ui_box_end(ui);
+        ui_box_end(ui); /* activitybar */
 }
 
-LOC void s_sidebar(Workbench *wb, Ui *ui)
+LOC void s_sidebar(Workbench *wb, UI *ui)
 {
-        UiBox *side;
-        UiBox *header;
+        UIBox *side;
+        UIBox *header;
 
         side = ui_box_begin(ui, "sidebar", "sidebar", 0);
         side->style.layout = UI_LAYOUT_COLUMN;
@@ -373,14 +388,14 @@ LOC void s_sidebar(Workbench *wb, Ui *ui)
                         "sidebar-title");
         ui_spacer(ui, ui_grow(1.0f), ui_px(0.0f));
         ui_icon_button(ui, "sidebar-more", ICON_MORE, "More Actions...", NULL);
-        ui_box_end(ui);
+        ui_box_end(ui); /* sidebar-header */
 
         s_placeholder(ui, wb->activity == SHELL_EXPLORER ?
                         "No folder opened" : "Search is not available yet");
-        ui_box_end(ui);
+        ui_box_end(ui); /* sidebar */
 }
 
-LOC void s_panel(Workbench *wb, Ui *ui)
+LOC void s_panel(Workbench *wb, UI *ui)
 {
         static const char *tabs[SHELL_PANEL_COUNT] = {
                 "PROBLEMS##panel", "OUTPUT##panel", "TERMINAL##panel"
@@ -390,9 +405,9 @@ LOC void s_panel(Workbench *wb, Ui *ui)
                 "Output will appear here.",
                 "The terminal is not available yet."
         };
-        UiBox *panel;
-        UiBox *header;
-        UiBox *tab;
+        UIBox *panel;
+        UIBox *header;
+        UIBox *tab;
         s32 i;
 
         panel = ui_box_begin(ui, "panel", "panel", 0);
@@ -413,16 +428,16 @@ LOC void s_panel(Workbench *wb, Ui *ui)
         if(ui_icon_button(ui, "panel-close", ICON_CLOSE, "Close Panel (Ctrl+J)",
                                 NULL).clicked)
                 wb->panel_visible = 0;
-        ui_box_end(ui);
+        ui_box_end(ui); /* panel-header */
 
         s_placeholder(ui, empty[wb->panel_tab]);
-        ui_box_end(ui);
+        ui_box_end(ui); /* panel */
 }
 
-LOC void s_statusbar(Workbench *wb, Ui *ui)
+LOC void s_statusbar(Workbench *wb, UI *ui)
 {
-        UiBox *bar;
-        UiBox *item;
+        UIBox *bar;
+        UIBox *item;
         View *v;
 
         bar = ui_box_begin(ui, "statusbar", "statusbar", 0);
@@ -449,17 +464,17 @@ LOC void s_statusbar(Workbench *wb, Ui *ui)
                                 dock_group_count(&wb->dock)), "status-text");
         ui_label(ui, "UTF-8", "status-text");
         ui_label(ui, "Vasall Studio", "status-text");
-        ui_box_end(ui);
+        ui_box_end(ui); /* statusbar */
 }
 
 /* An empty area with a muted, centered note */
-LOC void s_placeholder(Ui *ui, const char *text)
+LOC void s_placeholder(UI *ui, const char *text)
 {
-        UiBox *body;
+        UIBox *body;
 
         body = ui_box_begin(ui, NULL, "placeholder", 0);
         body->style.width = ui_grow(1.0f);
         body->style.height = ui_grow(1.0f);
         ui_label(ui, text, "placeholder-text");
-        ui_box_end(ui);
+        ui_box_end(ui); /* placeholder */
 }

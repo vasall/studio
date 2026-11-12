@@ -63,20 +63,20 @@ LOC s32 s_count_groups(DockNode *node);
 LOC Action *s_queue(BuildCtx *ctx, u8 kind, ViewHandle view,
                 DockNode *node);
 LOC void s_apply(Dock *dock, BuildCtx *ctx);
-LOC void s_build_node(Dock *dock, Ui *ui, BuildCtx *ctx, DockNode *node,
+LOC void s_build_node(Dock *dock, UI *ui, BuildCtx *ctx, DockNode *node,
                 f32 weight);
-LOC void s_build_split(Dock *dock, Ui *ui, BuildCtx *ctx, DockNode *node,
+LOC void s_build_split(Dock *dock, UI *ui, BuildCtx *ctx, DockNode *node,
                 f32 weight);
-LOC void s_build_group(Dock *dock, Ui *ui, BuildCtx *ctx, DockNode *node,
+LOC void s_build_group(Dock *dock, UI *ui, BuildCtx *ctx, DockNode *node,
                 f32 weight);
-LOC void s_build_empty(Ui *ui);
-LOC void s_reveal_active_tab(Ui *ui, DockNode *node, UiBox *scroll);
-LOC void s_update_drag(Dock *dock, Ui *ui, BuildCtx *ctx);
+LOC void s_build_empty(UI *ui);
+LOC void s_reveal_active_tab(UI *ui, DockNode *node, UIBox *scroll);
+LOC void s_update_drag(Dock *dock, UI *ui, BuildCtx *ctx);
 LOC DockNode *s_find_target(Dock *dock, DockNode *node, f32 x, f32 y,
                 u8 *zone_out, s32 *index_out);
-LOC void s_drag_overlay(Dock *dock, Ui *ui);
-LOC void s_tab_menu(Dock *dock, Ui *ui, BuildCtx *ctx);
-LOC UiBox *s_floating(Ui *ui, const char *cls, UiRect r);
+LOC void s_drag_overlay(Dock *dock, UI *ui);
+LOC void s_tab_menu(Dock *dock, UI *ui, BuildCtx *ctx);
+LOC UIBox *s_floating(UI *ui, const char *cls, UIRect r);
 
 /******************************************************************************
  *
@@ -249,7 +249,7 @@ PUB void dock_move(Dock *dock, ViewHandle view, DockNode *from, DockNode *to,
         s_cleanup(dock, from);
 }
 
-PUB void dock_build(Dock *dock, Ui *ui)
+PUB void dock_build(Dock *dock, UI *ui)
 {
         BuildCtx ctx;
 
@@ -269,7 +269,10 @@ PUB ViewHandle dock_active_view(Dock *dock)
         ViewHandle none = { POOL_HANDLE_NONE };
         ViewHandle *h;
 
-        if(!dock->active_group) return none;
+        if(!dock->active_group ||
+           dock->active_group->active < 0 ||
+           dock->active_group->active >= list_count(&dock->active_group->views))
+                return none;
         h = list_get(&dock->active_group->views, dock->active_group->active);
         return h ? *h : none;
 }
@@ -295,7 +298,7 @@ LOC DockNode *s_node_new(Dock *dock, u8 kind)
         list_init(&n->children, sizeof(DockNode *), 2);
         list_init(&n->ratios, sizeof(f32), 2);
         list_init(&n->views, sizeof(ViewHandle), 4);
-        list_init(&n->tab_rects, sizeof(UiRect), 4);
+        list_init(&n->tab_rects, sizeof(UIRect), 4);
         return n;
 }
 
@@ -543,7 +546,7 @@ LOC void s_apply(Dock *dock, BuildCtx *ctx)
         }
 }
 
-LOC void s_build_node(Dock *dock, Ui *ui, BuildCtx *ctx, DockNode *node,
+LOC void s_build_node(Dock *dock, UI *ui, BuildCtx *ctx, DockNode *node,
                 f32 weight)
 {
         if(node->kind == DOCK_SPLIT) {
@@ -553,10 +556,10 @@ LOC void s_build_node(Dock *dock, Ui *ui, BuildCtx *ctx, DockNode *node,
         }
 }
 
-LOC void s_build_split(Dock *dock, Ui *ui, BuildCtx *ctx, DockNode *node,
+LOC void s_build_split(Dock *dock, UI *ui, BuildCtx *ctx, DockNode *node,
                 f32 weight)
 {
-        UiBox *box;
+        UIBox *box;
         char id[32];
         f32 total;
         f32 delta;
@@ -593,21 +596,21 @@ LOC void s_build_split(Dock *dock, Ui *ui, BuildCtx *ctx, DockNode *node,
                 *s_ratio(node, i) += dr;
                 *s_ratio(node, i + 1) -= dr;
         }
-        ui_box_end(ui);
+        ui_box_end(ui); /* dock-split */
 }
 
-LOC void s_build_group(Dock *dock, Ui *ui, BuildCtx *ctx, DockNode *node,
+LOC void s_build_group(Dock *dock, UI *ui, BuildCtx *ctx, DockNode *node,
                 f32 weight)
 {
-        UiBox *group;
-        UiBox *bar;
-        UiBox *content;
-        UiBox *fill;
-        UiBox *scroll;
-        UiBoxState *st;
-        UiTabResult res;
-        UiSignal sig;
-        UiRect zero = { 0.0f, 0.0f, 0.0f, 0.0f };
+        UIBox *group;
+        UIBox *bar;
+        UIBox *content;
+        UIBox *fill;
+        UIBox *scroll;
+        UIBoxState *st;
+        UITabResult res;
+        UISignal sig;
+        UIRect zero = { 0.0f, 0.0f, 0.0f, 0.0f };
         ViewHandle h;
         View *v;
         Action *a;
@@ -683,9 +686,9 @@ LOC void s_build_group(Dock *dock, Ui *ui, BuildCtx *ctx, DockNode *node,
                         if(a) a->zone = DOCK_ZONE_BOTTOM;
                 }
         }
-        ui_box_end(ui);
+        ui_box_end(ui); /* tab-actions */
 
-        ui_box_end(ui);
+        ui_box_end(ui); /* tab-bar */
         node->tabbar_rect = bar->state ? bar->state->rect : zero;
 
         /* Content of the shown view */
@@ -710,22 +713,22 @@ LOC void s_build_group(Dock *dock, Ui *ui, BuildCtx *ctx, DockNode *node,
 
         sig = ui_signal(ui, content);
         if(sig.pressed || sig.right_clicked) dock->active_group = node;
-        ui_box_end(ui);
+        ui_box_end(ui); /* editor-content */
         node->content_rect = content->state ? content->state->rect : zero;
 
-        ui_box_end(ui);
+        ui_box_end(ui); /* editor-group */
 }
 
 /*
  * When the shown tab changes, scroll the tab bar so it is fully visible.
  * Uses last frame's rects; a new tab has none yet and waits a frame.
  */
-LOC void s_reveal_active_tab(Ui *ui, DockNode *node, UiBox *scroll)
+LOC void s_reveal_active_tab(UI *ui, DockNode *node, UIBox *scroll)
 {
         ViewHandle *h = list_get(&node->views, node->active);
-        UiRect *r = list_get(&node->tab_rects, node->active);
-        UiBoxState *st = scroll->state;
-        UiRect view;
+        UIRect *r = list_get(&node->tab_rects, node->active);
+        UIBoxState *st = scroll->state;
+        UIRect view;
 
         if(!h || !r || !st || r->w <= 0.0f) return;
         if(view_handle_equal(*h, node->revealed)) return;
@@ -741,7 +744,7 @@ LOC void s_reveal_active_tab(Ui *ui, DockNode *node, UiBox *scroll)
 }
 
 /* Shown when no editor is open */
-LOC void s_build_empty(Ui *ui)
+LOC void s_build_empty(UI *ui)
 {
         ui_box_begin(ui, NULL, "empty-editor", 0);
         ui_label(ui, "Vasall Studio", "empty-editor-title");
@@ -749,10 +752,10 @@ LOC void s_build_empty(Ui *ui)
         ui_label(ui, "Toggle Side Bar       Ctrl+B", "empty-editor-hint");
         ui_label(ui, "Toggle Panel          Ctrl+J", "empty-editor-hint");
         ui_label(ui, "Debug Overlay         F12", "empty-editor-hint");
-        ui_box_end(ui);
+        ui_box_end(ui); /* empty-editor */
 }
 
-LOC void s_update_drag(Dock *dock, Ui *ui, BuildCtx *ctx)
+LOC void s_update_drag(Dock *dock, UI *ui, BuildCtx *ctx)
 {
         DockDrag *d = &dock->drag;
         Action *a;
@@ -790,8 +793,8 @@ LOC DockNode *s_find_target(Dock *dock, DockNode *node, f32 x, f32 y,
                 u8 *zone_out, s32 *index_out)
 {
         DockNode *hit;
-        UiRect *r;
-        UiRect c;
+        UIRect *r;
+        UIRect c;
         f32 rx;
         f32 ry;
         f32 edge;
@@ -855,13 +858,13 @@ LOC DockNode *s_find_target(Dock *dock, DockNode *node, f32 x, f32 y,
         return node;
 }
 
-LOC void s_drag_overlay(Dock *dock, Ui *ui)
+LOC void s_drag_overlay(Dock *dock, UI *ui)
 {
         DockDrag *d = &dock->drag;
         DockNode *t = d->target;
-        UiBox *preview;
-        UiRect c;
-        UiRect *r;
+        UIBox *preview;
+        UIRect c;
+        UIRect *r;
         View *v;
         f32 x;
 
@@ -919,7 +922,7 @@ LOC void s_drag_overlay(Dock *dock, Ui *ui)
         ui_layer_end(ui);
 }
 
-LOC void s_tab_menu(Dock *dock, Ui *ui, BuildCtx *ctx)
+LOC void s_tab_menu(Dock *dock, UI *ui, BuildCtx *ctx)
 {
         Action *a;
 
@@ -945,9 +948,9 @@ LOC void s_tab_menu(Dock *dock, Ui *ui, BuildCtx *ctx)
 }
 
 /* A passive floating box at an absolute rect */
-LOC UiBox *s_floating(Ui *ui, const char *cls, UiRect r)
+LOC UIBox *s_floating(UI *ui, const char *cls, UIRect r)
 {
-        UiBox *b = ui_box(ui, NULL, cls, UI_BOX_FLOATING | UI_BOX_PASSIVE);
+        UIBox *b = ui_box(ui, NULL, cls, UI_BOX_FLOATING | UI_BOX_PASSIVE);
 
         b->style.width = ui_px(r.w);
         b->style.height = ui_px(r.h);

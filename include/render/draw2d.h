@@ -59,7 +59,7 @@ PUB s32 draw2d_init(Draw2D *d, const char *asset_dir);
 PUB void draw2d_deinit(Draw2D *d);
 
 /*
- * Draw a list of UiDrawCmd. Commands are in logical pixels and scaled by
+ * Draw a list of UIDrawCmd. Commands are in logical pixels and scaled by
  * scale to the framebuffer of fb_w x fb_h pixels.
  */
 PUB void draw2d_render(Draw2D *d, List *cmds, f32 scale, s32 fb_w, s32 fb_h);

@@ -5,9 +5,9 @@
 #include <ui/ui.h>
 #include <ui/widgets.h>
 
-LOC Ui s_ui;
-LOC UiTheme s_theme;
-LOC UiInput s_input;
+LOC UI s_ui;
+LOC UITheme s_theme;
+LOC UIInput s_input;
 
 LOC f32 s_measure(void *user, u8 font, f32 size, const char *text, s32 len)
 {
@@ -41,10 +41,10 @@ void tearDown(void)
 }
 
 /* One frame with a 100x40 button at the top left; returns its signal */
-LOC UiSignal s_frame_with_button(s32 with_button)
+LOC UISignal s_frame_with_button(s32 with_button)
 {
-        UiSignal sig;
-        UiBox *b;
+        UISignal sig;
+        UIBox *b;
 
         memset(&sig, 0, sizeof(sig));
         ui_begin_frame(&s_ui, &s_input, 400.0f, 300.0f, 0.0);
@@ -61,7 +61,7 @@ LOC UiSignal s_frame_with_button(s32 with_button)
 
 void test_state_survives_frames(void)
 {
-        UiBox *b;
+        UIBox *b;
         u64 key;
 
         ui_begin_frame(&s_ui, &s_input, 400.0f, 300.0f, 0.0);
@@ -79,7 +79,7 @@ void test_state_survives_frames(void)
 
 void test_state_freed_when_not_built(void)
 {
-        UiBox *b;
+        UIBox *b;
         u64 key;
 
         ui_begin_frame(&s_ui, &s_input, 400.0f, 300.0f, 0.0);
@@ -95,16 +95,16 @@ void test_state_freed_when_not_built(void)
 
 void test_same_id_different_parent_differs(void)
 {
-        UiBox *a;
-        UiBox *b;
+        UIBox *a;
+        UIBox *b;
 
         ui_begin_frame(&s_ui, &s_input, 400.0f, 300.0f, 0.0);
         ui_box_begin(&s_ui, "p1", NULL, 0);
         a = ui_box(&s_ui, "child", NULL, 0);
-        ui_box_end(&s_ui);
+        ui_box_end(&s_ui); /* p1 */
         ui_box_begin(&s_ui, "p2", NULL, 0);
         b = ui_box(&s_ui, "child", NULL, 0);
-        ui_box_end(&s_ui);
+        ui_box_end(&s_ui); /* p2 */
         ui_end_frame(&s_ui);
 
         TEST_ASSERT_TRUE(a->key != b->key);
@@ -112,7 +112,7 @@ void test_same_id_different_parent_differs(void)
 
 void test_click_takes_hover_press_release(void)
 {
-        UiSignal sig;
+        UISignal sig;
 
         /* Frame 1: the button gets its rect; frame 2: it becomes hot */
         s_input.mouse_x = 50.0f;
@@ -138,7 +138,7 @@ void test_click_takes_hover_press_release(void)
 
 void test_drag_is_not_a_click(void)
 {
-        UiSignal sig;
+        UISignal sig;
 
         s_input.mouse_x = 50.0f;
         s_input.mouse_y = 20.0f;
@@ -163,7 +163,7 @@ void test_drag_is_not_a_click(void)
 
 void test_theme_class_and_hover_state(void)
 {
-        UiStyle s;
+        UIStyle s;
 
         ui_theme_load_string(&s_theme,
                 "$accent = #102030\n"
@@ -201,11 +201,11 @@ void test_popup_closes_on_outside_click(void)
 }
 
 /* A 100x100 scroll area with 400 px of content; returns the y thumb */
-LOC UiBox *s_scroll_frame(UiBox **area_out)
+LOC UIBox *s_scroll_frame(UIBox **area_out)
 {
-        UiBox *area;
-        UiBox *c;
-        UiBox *thumb;
+        UIBox *area;
+        UIBox *c;
+        UIBox *thumb;
 
         ui_begin_frame(&s_ui, &s_input, 400.0f, 300.0f, 0.0);
         area = ui_scroll_begin(&s_ui, "area", NULL);
@@ -229,8 +229,8 @@ LOC UiBox *s_scroll_frame(UiBox **area_out)
 
 void test_scroll_thumb_stays_inside_area(void)
 {
-        UiBox *area;
-        UiBox *thumb;
+        UIBox *area;
+        UIBox *thumb;
 
         s_scroll_frame(&area);
         s_scroll_frame(&area);
@@ -250,7 +250,7 @@ void test_scroll_thumb_stays_inside_area(void)
 
 void test_wheel_clamps_at_the_end(void)
 {
-        UiBox *area;
+        UIBox *area;
 
         s_input.mouse_x = 50.0f;
         s_input.mouse_y = 50.0f;

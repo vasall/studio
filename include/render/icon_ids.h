@@ -25,6 +25,9 @@ typedef enum IconId {
         ICON_LAYOUT_PANEL,
         ICON_ADD,
         ICON_CUBE,
+        ICON_CHECK,
+        ICON_FOLDER,
+        ICON_FILE,
         ICON_COUNT
 } IconId;
 

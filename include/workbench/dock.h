@@ -43,9 +43,9 @@ typedef struct DockNode {
         s32 active;             /* Tabs: index of the shown tab */
 
         /* Tabs: geometry from the last frame, for drop targets */
-        UiRect tabbar_rect;
-        UiRect content_rect;
-        List tab_rects;         /* UiRect per tab */
+        UIRect tabbar_rect;
+        UIRect content_rect;
+        List tab_rects;         /* UIRect per tab */
         ViewHandle revealed;    /* Shown tab the tab bar last scrolled to */
 } DockNode;
 
@@ -136,7 +136,7 @@ PUB void dock_move(Dock *dock, ViewHandle view, DockNode *from, DockNode *to,
  * Build the dock into the current parent (it fills it) and handle tab
  * clicks, drags, drops and splitters.
  */
-PUB void dock_build(Dock *dock, Ui *ui);
+PUB void dock_build(Dock *dock, UI *ui);
 
 /*
  * The shown view of the active group (pool handle; invalid if none).

@@ -15,13 +15,13 @@
  *
  ******************************************************************************/
 
-LOC s32 s_parse_line(UiTheme *theme, char *line);
-LOC UiThemeClass *s_class_get_or_add(UiTheme *theme, const char *name);
-LOC const char *s_resolve_var(const UiTheme *theme, const char *value);
-LOC s32 s_parse_field(const UiTheme *theme, UiStyle *style, u32 *mask,
+LOC s32 s_parse_line(UITheme *theme, char *line);
+LOC UIThemeClass *s_class_get_or_add(UITheme *theme, const char *name);
+LOC const char *s_resolve_var(const UITheme *theme, const char *value);
+LOC s32 s_parse_field(const UITheme *theme, UIStyle *style, u32 *mask,
                 const char *field, const char *value);
-LOC s32 s_parse_color(const UiTheme *theme, const char *value, UiColor *out);
-LOC s32 s_parse_size(const char *value, UiSize *out);
+LOC s32 s_parse_color(const UITheme *theme, const char *value, UIColor *out);
+LOC s32 s_parse_size(const char *value, UISize *out);
 LOC s32 s_parse_numbers(const char *value, f32 *out, s32 max);
 LOC s32 s_parse_sides(const char *value, f32 out[4]);
 LOC s32 s_parse_corners(const char *value, f32 out[4]);
@@ -35,13 +35,13 @@ LOC void s_copy(char *dst, const char *src, s32 size);
  *
  ******************************************************************************/
 
-PUB s32 ui_theme_init(UiTheme *theme)
+PUB s32 ui_theme_init(UITheme *theme)
 {
         if(!theme) return -1;
 
-        if(list_init(&theme->classes, sizeof(UiThemeClass), 32) < 0)
+        if(list_init(&theme->classes, sizeof(UIThemeClass), 32) < 0)
                 return -1;
-        if(list_init(&theme->vars, sizeof(UiThemeVar), 32) < 0) {
+        if(list_init(&theme->vars, sizeof(UIThemeVar), 32) < 0) {
                 list_deinit(&theme->classes);
                 return -1;
         }
@@ -53,7 +53,7 @@ PUB s32 ui_theme_init(UiTheme *theme)
         return 0;
 }
 
-PUB void ui_theme_deinit(UiTheme *theme)
+PUB void ui_theme_deinit(UITheme *theme)
 {
         if(!theme) return;
         list_deinit(&theme->classes);
@@ -61,7 +61,7 @@ PUB void ui_theme_deinit(UiTheme *theme)
         hashmap_deinit(&theme->class_index);
 }
 
-PUB s32 ui_theme_load_string(UiTheme *theme, const char *text)
+PUB s32 ui_theme_load_string(UITheme *theme, const char *text)
 {
         char line[LINE_LEN];
         const char *p = text;
@@ -94,7 +94,7 @@ PUB s32 ui_theme_load_string(UiTheme *theme, const char *text)
         return bad;
 }
 
-PUB s32 ui_theme_load_file(UiTheme *theme, const char *path)
+PUB s32 ui_theme_load_file(UITheme *theme, const char *path)
 {
         FILE *fp;
         long size;
@@ -125,7 +125,7 @@ PUB s32 ui_theme_load_file(UiTheme *theme, const char *path)
         return bad;
 }
 
-PUB const UiThemeClass *ui_theme_class(const UiTheme *theme, const char *name)
+PUB const UIThemeClass *ui_theme_class(const UITheme *theme, const char *name)
 {
         u64 idx;
 
@@ -136,11 +136,11 @@ PUB const UiThemeClass *ui_theme_class(const UiTheme *theme, const char *name)
         return list_get((List *)&theme->classes, (s32)idx - 1);
 }
 
-PUB UiStyle ui_theme_style(const UiTheme *theme, const char *name, u32 states)
+PUB UIStyle ui_theme_style(const UITheme *theme, const char *name, u32 states)
 {
-        UiStyle style = ui_style_default();
+        UIStyle style = ui_style_default();
         char prefix[UI_THEME_NAME_LEN];
-        const UiThemeClass *chain[8];
+        const UIThemeClass *chain[8];
         s32 chain_len = 0;
         s32 i;
         s32 s;
@@ -173,11 +173,11 @@ PUB UiStyle ui_theme_style(const UiTheme *theme, const char *name, u32 states)
         return style;
 }
 
-PUB UiColor ui_theme_color(const UiTheme *theme, const char *name,
-                UiColor fallback)
+PUB UIColor ui_theme_color(const UITheme *theme, const char *name,
+                UIColor fallback)
 {
         char ref[UI_THEME_NAME_LEN + 1];
-        UiColor c;
+        UIColor c;
 
         if(!theme || !name) return fallback;
 
@@ -187,7 +187,7 @@ PUB UiColor ui_theme_color(const UiTheme *theme, const char *name,
         return c;
 }
 
-PUB f32 ui_theme_number(const UiTheme *theme, const char *name, f32 fallback)
+PUB f32 ui_theme_number(const UITheme *theme, const char *name, f32 fallback)
 {
         char ref[UI_THEME_NAME_LEN + 1];
         const char *value;
@@ -208,17 +208,17 @@ PUB f32 ui_theme_number(const UiTheme *theme, const char *name, f32 fallback)
  *
  ******************************************************************************/
 
-LOC s32 s_parse_line(UiTheme *theme, char *line)
+LOC s32 s_parse_line(UITheme *theme, char *line)
 {
         char *eq;
         char *key;
         char *value;
         char *dot;
         char *colon;
-        UiThemeClass *cls;
-        UiThemeVar var;
+        UIThemeClass *cls;
+        UIThemeVar var;
         s32 state = -1;
-        UiStyle *style;
+        UIStyle *style;
         u32 *mask;
         const char *state_names[UI_STATE_COUNT];
 
@@ -246,7 +246,7 @@ LOC s32 s_parse_line(UiTheme *theme, char *line)
 
                 /* Overwrite an existing variable */
                 for(i = 0; i < list_count(&theme->vars); i++) {
-                        UiThemeVar *v = list_get(&theme->vars, i);
+                        UIThemeVar *v = list_get(&theme->vars, i);
                         if(strcmp(v->name, var.name) == 0) {
                                 *v = var;
                                 return 0;
@@ -280,9 +280,9 @@ LOC s32 s_parse_line(UiTheme *theme, char *line)
         return s_parse_field(theme, style, mask, dot + 1, value);
 }
 
-LOC UiThemeClass *s_class_get_or_add(UiTheme *theme, const char *name)
+LOC UIThemeClass *s_class_get_or_add(UITheme *theme, const char *name)
 {
-        UiThemeClass cls;
+        UIThemeClass cls;
         u64 idx;
         s32 i;
 
@@ -301,7 +301,7 @@ LOC UiThemeClass *s_class_get_or_add(UiTheme *theme, const char *name)
         return list_get(&theme->classes, (s32)idx - 1);
 }
 
-LOC const char *s_resolve_var(const UiTheme *theme, const char *value)
+LOC const char *s_resolve_var(const UITheme *theme, const char *value)
 {
         s32 depth;
         s32 i;
@@ -311,7 +311,7 @@ LOC const char *s_resolve_var(const UiTheme *theme, const char *value)
         for(depth = 0; depth < 8 && value && value[0] == '$'; depth++) {
                 found = 0;
                 for(i = 0; i < list_count((List *)&theme->vars); i++) {
-                        UiThemeVar *v = list_get((List *)&theme->vars, i);
+                        UIThemeVar *v = list_get((List *)&theme->vars, i);
                         if(strcmp(v->name, value + 1) == 0) {
                                 value = v->value;
                                 found = 1;
@@ -323,7 +323,7 @@ LOC const char *s_resolve_var(const UiTheme *theme, const char *value)
         return value;
 }
 
-LOC s32 s_parse_field(const UiTheme *theme, UiStyle *style, u32 *mask,
+LOC s32 s_parse_field(const UITheme *theme, UIStyle *style, u32 *mask,
                 const char *field, const char *value)
 {
         const char *align[3];
@@ -392,7 +392,8 @@ LOC s32 s_parse_field(const UiTheme *theme, UiStyle *style, u32 *mask,
                 *mask |= UI_FIELD_LAYOUT;
         } else if(strcmp(field, "wrap") == 0) {
                 style->wrap = (strcmp(value, "wrap") == 0 ||
-                                strcmp(value, "true") == 0);
+                                strcmp(value, "true") == 0 ||
+                                strcmp(value, "1") == 0);
                 *mask |= UI_FIELD_WRAP;
         } else if(strcmp(field, "overflow") == 0) {
                 if((e = s_parse_enum(value, overflow, 3)) < 0) return -1;
@@ -417,7 +418,7 @@ LOC s32 s_parse_field(const UiTheme *theme, UiStyle *style, u32 *mask,
         return 0;
 }
 
-LOC s32 s_parse_color(const UiTheme *theme, const char *value, UiColor *out)
+LOC s32 s_parse_color(const UITheme *theme, const char *value, UIColor *out)
 {
         u32 v;
         s32 len;
@@ -446,7 +447,7 @@ LOC s32 s_parse_color(const UiTheme *theme, const char *value, UiColor *out)
         return 0;
 }
 
-LOC s32 s_parse_size(const char *value, UiSize *out)
+LOC s32 s_parse_size(const char *value, UISize *out)
 {
         f32 n;
         char *end;

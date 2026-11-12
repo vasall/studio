@@ -10,59 +10,59 @@
  *
  ******************************************************************************/
 
-typedef struct UiRect {
+typedef struct UIRect {
         f32 x;
         f32 y;
         f32 w;
         f32 h;
-} UiRect;
+} UIRect;
 
-typedef struct UiColor {
+typedef struct UIColor {
         u8 r;
         u8 g;
         u8 b;
         u8 a;
-} UiColor;
+} UIColor;
 
-typedef enum UiSizeKind {
+typedef enum UISizeKind {
         UI_SIZE_FIT = 0,        /* Wrap content: children or text + padding */
         UI_SIZE_PIXELS,         /* Fixed logical pixels */
         UI_SIZE_PERCENT,        /* Of the parent's content box (0..1) */
         UI_SIZE_GROW            /* Share of the leftover space, by weight */
-} UiSizeKind;
+} UISizeKind;
 
-typedef struct UiSize {
+typedef struct UISize {
         u8 kind;
         f32 value;              /* Pixels, percent (0..1) or grow weight */
         f32 min;
         f32 max;                /* <= 0 means no limit */
-} UiSize;
+} UISize;
 
-typedef enum UiLayout {
+typedef enum UILayout {
         UI_LAYOUT_ROW = 0,      /* Children left to right */
         UI_LAYOUT_COLUMN,       /* Children top to bottom */
         UI_LAYOUT_STACK         /* Children on top of each other */
-} UiLayout;
+} UILayout;
 
-typedef enum UiAlign {
+typedef enum UIAlign {
         UI_ALIGN_START = 0,
         UI_ALIGN_CENTER,
         UI_ALIGN_END
-} UiAlign;
+} UIAlign;
 
-typedef enum UiOverflow {
+typedef enum UIOverflow {
         UI_OVERFLOW_VISIBLE = 0,
         UI_OVERFLOW_CLIP,
         UI_OVERFLOW_SCROLL
-} UiOverflow;
+} UIOverflow;
 
-typedef enum UiFont {
+typedef enum UIFont {
         UI_FONT_UI = 0,
         UI_FONT_UI_MEDIUM,
         UI_FONT_UI_BOLD,
         UI_FONT_CODE,
         UI_FONT_COUNT
-} UiFont;
+} UIFont;
 
 /* Index order of per-side arrays */
 enum {
@@ -86,12 +86,12 @@ enum {
         UI_AXIS_Y = 1
 };
 
-typedef struct UiStyle {
-        UiSize width;
-        UiSize height;
+typedef struct UIStyle {
+        UISize width;
+        UISize height;
 
-        UiColor infill;         /* Background fill, a = 0 means none */
-        UiColor border_color;
+        UIColor infill;         /* Background fill, a = 0 means none */
+        UIColor border_color;
         f32 border_width;       /* Drawn inside the box */
         f32 corner_radius[4];   /* Per corner, see UI_TOP_LEFT... */
 
@@ -99,22 +99,22 @@ typedef struct UiStyle {
         f32 padding[4];         /* Inside, per side */
         f32 gap;                /* Space between children */
 
-        u8 align_x;             /* UiAlign: children horizontally */
-        u8 align_y;             /* UiAlign: children vertically */
-        u8 layout;              /* UiLayout */
+        u8 align_x;             /* UIAlign: children horizontally */
+        u8 align_y;             /* UIAlign: children vertically */
+        u8 layout;              /* UILayout */
         u8 wrap;                /* Row/column: 0 = overflow, 1 = wrap */
-        u8 overflow;            /* UiOverflow, when not wrapping */
+        u8 overflow;            /* UIOverflow, when not wrapping */
 
-        u8 font;                /* UiFont */
+        u8 font;                /* UIFont */
         f32 font_size;
-        UiColor text_color;
-} UiStyle;
+        UIColor text_color;
+} UIStyle;
 
 /*
  * One bit per style field. Theme classes and state overrides only apply the
  * fields whose bit is set.
  */
-typedef enum UiStyleField {
+typedef enum UIStyleField {
         UI_FIELD_WIDTH          = 1 << 0,
         UI_FIELD_HEIGHT         = 1 << 1,
         UI_FIELD_INFILL         = 1 << 2,
@@ -132,7 +132,7 @@ typedef enum UiStyleField {
         UI_FIELD_FONT           = 1 << 14,
         UI_FIELD_FONT_SIZE      = 1 << 15,
         UI_FIELD_TEXT_COLOR     = 1 << 16
-} UiStyleField;
+} UIStyleField;
 
 /******************************************************************************
  *
@@ -141,20 +141,20 @@ typedef enum UiStyleField {
  ******************************************************************************/
 
 /* Sizes */
-PUB UiSize ui_fit(void);
-PUB UiSize ui_px(f32 px);
-PUB UiSize ui_pct(f32 pct);
-PUB UiSize ui_grow(f32 weight);
+PUB UISize ui_fit(void);
+PUB UISize ui_px(f32 px);
+PUB UISize ui_pct(f32 pct);
+PUB UISize ui_grow(f32 weight);
 
 /* Colors */
-PUB UiColor ui_rgba(u8 r, u8 g, u8 b, u8 a);
-PUB UiColor ui_hex(u32 rrggbbaa);
-PUB UiColor ui_color_none(void);
+PUB UIColor ui_rgba(u8 r, u8 g, u8 b, u8 a);
+PUB UIColor ui_hex(u32 rrggbbaa);
+PUB UIColor ui_color_none(void);
 
 /* Rects */
-PUB UiRect ui_rect(f32 x, f32 y, f32 w, f32 h);
-PUB UiRect ui_rect_intersect(UiRect a, UiRect b);
-PUB s32 ui_rect_contains(UiRect r, f32 x, f32 y);
+PUB UIRect ui_rect(f32 x, f32 y, f32 w, f32 h);
+PUB UIRect ui_rect_intersect(UIRect a, UIRect b);
+PUB s32 ui_rect_contains(UIRect r, f32 x, f32 y);
 
 /* Fill all four sides / corners with one value or four values */
 PUB void ui_sides(f32 out[4], f32 all);
@@ -165,11 +165,11 @@ PUB void ui_radius4(f32 out[4], f32 tl, f32 tr, f32 br, f32 bl);
 /*
  * The default style: fit size, row layout, no fill, no border, UI font.
  */
-PUB UiStyle ui_style_default(void);
+PUB UIStyle ui_style_default(void);
 
 /*
  * Copy the fields selected by mask from src to dst.
  */
-PUB void ui_style_apply(UiStyle *dst, const UiStyle *src, u32 mask);
+PUB void ui_style_apply(UIStyle *dst, const UIStyle *src, u32 mask);
 
 #endif /* VASALL_STUDIO_UI_STYLE_H */

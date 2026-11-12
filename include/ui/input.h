@@ -70,30 +70,30 @@ enum {
         UI_MOUSE_BUTTONS
 };
 
-typedef enum UiEventKind {
+typedef enum UIEventKind {
         UI_EVENT_KEY_DOWN = 0,
         UI_EVENT_KEY_UP,
         UI_EVENT_TEXT
-} UiEventKind;
+} UIEventKind;
 
 /*
  * One keyboard event. Keys and text are kept in one queue, so they can be
  * handled in the order they were typed.
  */
-typedef struct UiEvent {
-        u8 kind;                /* UiEventKind */
+typedef struct UIEvent {
+        u8 kind;                /* UIEventKind */
         u8 repeat;              /* Key held down */
         u8 consumed;            /* Set by whoever handled it */
         u16 mods;
         u32 key;                /* UI_KEY_* or ASCII */
         u32 scan;               /* UI_SCAN_* */
         char text[UI_INPUT_TEXT_LEN]; /* UTF-8, for UI_EVENT_TEXT */
-} UiEvent;
+} UIEvent;
 
 /*
  * Input of one window for one frame, in logical pixels.
  */
-typedef struct UiInput {
+typedef struct UIInput {
         f32 mouse_x;
         f32 mouse_y;
         s32 mouse_inside;       /* The mouse is over the window */
@@ -108,9 +108,9 @@ typedef struct UiInput {
 
         u16 mods;
 
-        UiEvent events[UI_INPUT_MAX_EVENTS];
+        UIEvent events[UI_INPUT_MAX_EVENTS];
         s32 event_count;
-} UiInput;
+} UIInput;
 
 /******************************************************************************
  *
@@ -122,17 +122,17 @@ typedef struct UiInput {
  * Clear the per-frame parts (pressed/released, wheel, events). Held buttons,
  * mouse position and modifiers stay.
  */
-PUB void ui_input_next_frame(UiInput *in);
+PUB void ui_input_next_frame(UIInput *in);
 
 /*
  * Append an event. Returns 0, or -1 if the queue is full.
  */
-PUB s32 ui_input_push(UiInput *in, const UiEvent *ev);
+PUB s32 ui_input_push(UIInput *in, const UIEvent *ev);
 
 /*
  * Check if a key event matches a key and an exact set of modifiers.
  * Matches the keycode, or the physical key if scan isn't UI_SCAN_NONE.
  */
-PUB s32 ui_event_is_key(const UiEvent *ev, u32 key, u32 scan, u16 mods);
+PUB s32 ui_event_is_key(const UIEvent *ev, u32 key, u32 scan, u16 mods);
 
 #endif /* VASALL_STUDIO_UI_INPUT_H */

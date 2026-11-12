@@ -28,6 +28,8 @@ $blue-50             = #4589ff
 $blue-60             = #0f62fe
 $blue-80             = #002d9c
 $yellow-30           = #f1c21b
+$red-50              = #fa4d56
+$green-40            = #42be65
 
 # --- Carbon g100 tokens ------------------------------------------------------
 
@@ -67,6 +69,13 @@ $button-primary-active  = $blue-80
 
 $highlight           = $blue-80
 $support-warning     = $yellow-30
+$support-error       = $red-50
+$support-info        = $blue-50
+$support-success     = $green-40
+
+$field-01            = $gray-90
+$field-hover-01      = #333333
+$icon-inverse        = $gray-100
 
 # Translucent versions, for overlays on any layer
 $background-hover    = #8d8d8d29
@@ -344,6 +353,184 @@ status-item:hover.infill  = $button-primary-hover
 status-text.padding       = 0 6
 status-text.font-size     = 12
 status-text.text-color    = $text-on-color
+
+# --- form controls -----------------------------------------------------------
+
+checkbox.height               = 24
+checkbox.padding              = 0 4 0 2
+checkbox.gap                  = 8
+checkbox.align-y              = center
+checkbox.corner-radius        = 2
+checkbox:focused.border-width = 1
+checkbox:focused.border-color = $focus
+
+checkbox-box.width            = 16
+checkbox-box.height           = 16
+checkbox-box.align-x          = center
+checkbox-box.align-y          = center
+checkbox-box.corner-radius    = 2
+checkbox-box.border-width     = 1
+checkbox-box.border-color     = $icon-primary
+checkbox-box.text-color       = $icon-inverse
+checkbox-box:selected.infill  = $icon-primary
+
+checkbox-label.text-color     = $text-primary
+
+radio.height                  = 24
+radio.padding                 = 0 4 0 2
+radio.gap                     = 8
+radio.align-y                 = center
+radio.corner-radius           = 2
+radio:focused.border-width    = 1
+radio:focused.border-color    = $focus
+
+radio-dot.width               = 16
+radio-dot.height              = 16
+radio-dot.align-x             = center
+radio-dot.align-y             = center
+radio-dot.corner-radius       = 8
+radio-dot.border-width        = 1
+radio-dot.border-color        = $icon-primary
+radio-dot.text-color          = $icon-primary
+
+radio-label.text-color        = $text-primary
+
+# Carbon text inputs: field color, no radius, a focus ring
+text-field.width              = 240
+text-field.height             = 32
+text-field.padding            = 0 12
+text-field.infill             = $field-01
+text-field.border-width       = 1
+text-field.border-color       = $border-subtle-01
+text-field.text-color         = $text-primary
+text-field:hover.infill       = $field-hover-01
+text-field:focused.border-width = 2
+text-field:focused.border-color = $focus
+
+text-field-selection.infill   = #0f62fe80
+text-field-placeholder.text-color = $text-placeholder
+
+dropdown.width                = 240
+dropdown.height               = 32
+dropdown.padding              = 0 12 0 16
+dropdown.gap                  = 8
+dropdown.align-y              = center
+dropdown.infill               = $field-01
+dropdown.border-width         = 1
+dropdown.border-color         = $border-subtle-01
+dropdown:hover.infill         = $field-hover-01
+dropdown:focused.border-width = 2
+dropdown:focused.border-color = $focus
+dropdown:selected.border-color = $border-interactive
+
+dropdown-label.text-color     = $text-primary
+dropdown-chevron.text-color   = $icon-primary
+
+menu-item:selected.infill     = $layer-selected-01
+
+slider.width                  = 240
+slider.height                 = 20
+slider.corner-radius          = 2
+slider:focused.border-width   = 1
+slider:focused.border-color   = $focus
+
+slider-track.height           = 2
+slider-track.infill           = $border-subtle-01
+slider-fill.height            = 2
+slider-fill.infill            = $interactive
+slider-thumb.width            = 14
+slider-thumb.height           = 14
+slider-thumb.corner-radius    = 7
+slider-thumb.infill           = $icon-primary
+slider-thumb:selected.infill  = $blue-40
+
+progress.width                = 240
+progress.height               = 4
+progress.infill               = $layer-02
+progress-fill.infill          = $interactive
+
+badge.height                  = 18
+badge.padding                 = 0 7
+badge.align-y                 = center
+badge.corner-radius           = 9
+badge.font-size               = 11
+badge.infill                  = $blue-60
+badge.text-color              = $text-on-color
+badge.gray.infill             = $gray-70
+badge.warning.infill          = $support-warning
+badge.warning.text-color      = $text-inverse
+badge.error.infill            = $support-error
+
+# --- trees and lists ---------------------------------------------------------
+
+list.width                    = grow
+list.height                   = grow
+
+tree-row.height               = 22
+tree-row.padding              = 0 8 0 8
+tree-row.gap                  = 4
+tree-row.align-y              = center
+tree-row:hover.infill         = $layer-hover-01
+tree-row:selected.infill      = $layer-selected-01
+
+tree-chevron.width            = 16
+tree-chevron.height           = 16
+tree-chevron.text-color       = $icon-secondary
+tree-icon.text-color          = $icon-secondary
+tree-label.text-color         = $text-secondary
+tree-label.selected.text-color = $text-primary
+
+# --- notifications -----------------------------------------------------------
+
+toasts.gap                    = 8
+
+toast.padding                 = 8 8 8 14
+toast.gap                     = 12
+toast.align-y                 = center
+toast.infill                  = $layer-02
+toast.border-width            = 1
+toast.border-color            = $border-subtle-01
+toast.corner-radius           = 2
+
+toast-icon.info.text-color    = $support-info
+toast-icon.warning.text-color = $support-warning
+toast-icon.error.text-color   = $support-error
+toast-text.text-color         = $text-primary
+
+# --- UI gallery view ---------------------------------------------------------
+
+gallery.width                 = grow
+gallery.height                = grow
+gallery.layout                = column
+gallery.padding               = 24 32
+gallery.gap                   = 22
+
+gallery-title.font            = ui-bold
+gallery-title.font-size       = 22
+gallery-title.text-color      = $text-primary
+
+gallery-section.layout        = column
+gallery-section.width         = grow
+gallery-section.gap           = 10
+
+gallery-heading.font          = ui-medium
+gallery-heading.font-size     = 14
+gallery-heading.text-color    = $text-primary
+
+gallery-row.width             = grow
+gallery-row.gap               = 12
+gallery-row.align-y           = center
+gallery-row.wrap              = true
+
+gallery-text.text-color       = $text-secondary
+gallery-hint.font-size        = 12
+gallery-hint.text-color       = $text-helper
+
+gallery-tree.width            = 360
+gallery-tree.height           = 240
+gallery-tree.infill           = $layer-01
+gallery-tree.border-width     = 1
+gallery-tree.border-color     = $border-subtle-00
 
 # --- debug overlay -----------------------------------------------------------
 

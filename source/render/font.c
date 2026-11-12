@@ -3,6 +3,7 @@
 #include <devkit/log/log.h>
 #include <devkit/memory/utf8.h>
 
+#include <core/file.h>
 #include <render/gl_util.h>
 
 #include <math.h>
@@ -26,13 +27,17 @@ LOC u64 s_key(Font *font, f32 px, u32 cp);
 
 PUB s32 font_load(Font *font, const char *path, u8 id)
 {
+        s32 off;
+
         memset(font, 0, sizeof(*font));
 
-        font->data = (u8 *)gl_read_file(path, NULL);
-        if(!font->data) return -1;
+        if(!(font->data = file_read(path, NULL))) {
+                LOG_S(LOG_ERROR, "Failed to read file %s", path);
+                return -1;
+        }
 
-        if(!stbtt_InitFont(&font->info, font->data,
-                                stbtt_GetFontOffsetForIndex(font->data, 0))) {
+        off = stbtt_GetFontOffsetForIndex(font->data, 0);
+        if(!stbtt_InitFont(&font->info, font->data, off)) {
                 LOG_S(LOG_ERROR, "font: can't parse %s", (char *)path);
                 free(font->data);
                 font->data = NULL;

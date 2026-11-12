@@ -29,6 +29,9 @@ LOC f64 s_now(void);
 LOC void s_save_ppm(const char *path, s32 w, s32 h);
 LOC f32 s_measure(void *user, u8 font, f32 size, const char *text, s32 len);
 LOC f32 s_line_height(void *user, u8 font, f32 size);
+LOC s32 s_clipboard_get(void *user, char *buf, s32 cap);
+LOC void s_clipboard_set(void *user, const char *text, s32 len);
+LOC void s_update_text_input(AppWindow *win);
 
 /******************************************************************************
  *
@@ -174,6 +177,9 @@ PUB AppWindow *app_window_open(App *app, const char *title, s32 w, s32 h,
         if(ui_init(&win->ui, &app->theme, s_measure, s_line_height, win) < 0) {
                 goto err;
         }
+        win->ui.clipboard_get = s_clipboard_get;
+        win->ui.clipboard_set = s_clipboard_set;
+        win->ui.clipboard_user = win;
 
         s_update_metrics(win);
         list_push(&app->windows, 1, &win);
@@ -421,7 +427,7 @@ LOC void s_update_metrics(AppWindow *win)
 
 LOC void s_render(App *app, AppWindow *win)
 {
-        UiColor bg;
+        UIColor bg;
         f64 t0;
         s32 more;
 
@@ -436,6 +442,7 @@ LOC void s_render(App *app, AppWindow *win)
         if(win->frame_fn) win->frame_fn(win, win->frame_user);
         more = ui_end_frame(&win->ui);
         ui_input_next_frame(&win->input);
+        s_update_text_input(win);
 
         if(win->ui.cursor != app->cursor && app->cursors[win->ui.cursor]) {
                 app->cursor = win->ui.cursor;
@@ -528,4 +535,61 @@ LOC f32 s_line_height(void *user, u8 font, f32 size)
         AppWindow *win = user;
 
         return draw2d_line_height(&win->app->draw, font, size, win->scale);
+}
+
+LOC s32 s_clipboard_get(void *user, char *buf, s32 cap)
+{
+        char *text;
+        s32 len;
+
+        (void)user;
+        if(cap <= 0) return 0;
+        buf[0] = '\0';
+        if(!(text = SDL_GetClipboardText())) return 0;
+
+        len = (s32)SDL_strlcpy(buf, text, (size_t)cap);
+        if(len > cap - 1) len = cap - 1;
+        SDL_free(text);
+        return len;
+}
+
+LOC void s_clipboard_set(void *user, const char *text, s32 len)
+{
+        char *copy;
+
+        (void)user;
+        if(!(copy = SDL_malloc((size_t)len + 1))) return;
+        SDL_memcpy(copy, text, (size_t)len);
+        copy[len] = '\0';
+        SDL_SetClipboardText(copy);
+        SDL_free(copy);
+}
+
+/* Text input (and the IME) is on only while a text field has focus */
+LOC void s_update_text_input(AppWindow *win)
+{
+        UIRect r = win->ui.text_input_rect;
+        SDL_Rect area;
+
+        if(win->ui.text_input != win->text_input_on) {
+                if(win->ui.text_input) {
+                        SDL_StartTextInput(win->sdl);
+                } else {
+                        SDL_StopTextInput(win->sdl);
+                }
+                win->text_input_on = win->ui.text_input;
+        }
+        if(!win->text_input_on || win->mouse_scale <= 0.0f) return;
+
+        /* Logical pixels -> window coordinates */
+        area.x = (int)(r.x / win->mouse_scale);
+        area.y = (int)(r.y / win->mouse_scale);
+        area.w = (int)(r.w / win->mouse_scale) + 1;
+        area.h = (int)(r.h / win->mouse_scale) + 1;
+        if(area.x != win->text_input_area.x ||
+           area.y != win->text_input_area.y ||
+           area.h != win->text_input_area.h) {
+                SDL_SetTextInputArea(win->sdl, &area, 0);
+                win->text_input_area = area;
+        }
 }

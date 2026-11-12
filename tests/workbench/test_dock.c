@@ -65,6 +65,16 @@ void test_open_and_close(void)
         TEST_ASSERT_EQUAL_INT(0, list_count(&s_dock.root->views));
 }
 
+void test_empty_group_has_no_active_view(void)
+{
+        s_open("a");
+        dock_close_active(&s_dock);
+        dock_close_active(&s_dock);
+
+        TEST_ASSERT_EQUAL_INT(0, list_count(&s_dock.root->views));
+        TEST_ASSERT_NULL(view_get(&s_views, dock_active_view(&s_dock)));
+}
+
 void test_split_creates_group_and_cleanup_folds_it(void)
 {
         DockNode *left = s_dock.root;
@@ -192,26 +202,26 @@ LOC f32 s_line_height(void *user, u8 font, f32 size)
         return 16.0f;
 }
 
-LOC void s_frame(Ui *ui, UiInput *in)
+LOC void s_frame(UI *ui, UIInput *in)
 {
-        UiBox *area;
+        UIBox *area;
 
         ui_begin_frame(ui, in, 800.0f, 600.0f, 0.0);
         area = ui_box_begin(ui, "area", NULL, 0);
         area->style.width = ui_grow(1.0f);
         area->style.height = ui_grow(1.0f);
         dock_build(&s_dock, ui);
-        ui_box_end(ui);
+        ui_box_end(ui); /* area */
         ui_end_frame(ui);
         ui_input_next_frame(in);
 }
 
 void test_drag_tab_to_right_edge_splits(void)
 {
-        Ui ui;
-        UiTheme theme;
-        UiInput in;
-        UiRect *tab;
+        UI ui;
+        UITheme theme;
+        UIInput in;
+        UIRect *tab;
         DockNode *g = s_dock.root;
         ViewHandle a;
 
@@ -265,6 +275,7 @@ int main(void)
 {
         UNITY_BEGIN();
         RUN_TEST(test_open_and_close);
+        RUN_TEST(test_empty_group_has_no_active_view);
         RUN_TEST(test_split_creates_group_and_cleanup_folds_it);
         RUN_TEST(test_split_same_axis_adds_sibling);
         RUN_TEST(test_split_other_axis_nests);

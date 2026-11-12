@@ -10,7 +10,7 @@
  *
  ******************************************************************************/
 
-LOC void s_outline(Ui *ui, UiBox *box, s32 depth);
+LOC void s_outline(UI *ui, UIBox *box, s32 depth);
 
 /******************************************************************************
  *
@@ -18,10 +18,10 @@ LOC void s_outline(Ui *ui, UiBox *box, s32 depth);
  *
  ******************************************************************************/
 
-PUB void ui_debug_panel(Ui *ui, const char *info)
+PUB void ui_debug_panel(UI *ui, const char *info)
 {
-        UiBox *panel;
-        UiBoxState *st;
+        UIBox *panel;
+        UIBoxState *st;
         char buf[160];
 
         if(!ui->debug) return;
@@ -53,11 +53,11 @@ PUB void ui_debug_panel(Ui *ui, const char *info)
 
         if(info) ui_label(ui, info, "debug-text");
 
-        ui_box_end(ui);
+        ui_box_end(ui); /* debug-panel */
         ui_layer_end(ui);
 }
 
-PUB void ui_debug_outlines(Ui *ui)
+PUB void ui_debug_outlines(UI *ui)
 {
         s32 i;
 
@@ -71,13 +71,13 @@ PUB void ui_debug_outlines(Ui *ui)
  *
  ******************************************************************************/
 
-LOC void s_outline(Ui *ui, UiBox *box, s32 depth)
+LOC void s_outline(UI *ui, UIBox *box, s32 depth)
 {
         static const u32 colors[4] = {
                 0xff5f5fa0, 0x5fff5fa0, 0x5f9fffa0, 0xffdf5fa0
         };
-        UiDrawCmd cmd;
-        UiBox *c;
+        UIDrawCmd cmd;
+        UIBox *c;
 
         if(box->rect.w > 0.0f && box->rect.h > 0.0f) {
                 memset(&cmd, 0, sizeof(cmd));
