@@ -13,7 +13,7 @@
  *
  ******************************************************************************/
 
-/*
+/**
  * A 3D view: a box that moves cam with the mouse and leaves the drawing to
  * draw (see UIDrawCallbackFn), which gets the box's content area as its
  * viewport. Usually called through scene_viewport (render/scene.h), which

@@ -24,7 +24,7 @@ typedef struct UITabResult {
  *
  ******************************************************************************/
 
-/*
+/**
  * An editor tab with title, optional icon and close button. The close
  * button shows on the selected tab and on hover. The selected tab gets an
  * accent line on top. cls defaults to "tab".

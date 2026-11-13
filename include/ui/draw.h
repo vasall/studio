@@ -20,7 +20,7 @@ typedef enum UIDrawKind {
         UI_DRAW_CALLBACK        /* Own rendering code, e.g. a live plot */
 } UIDrawKind;
 
-/*
+/**
  * Where a UI_DRAW_CALLBACK draws, in framebuffer pixels. When the callback
  * runs, the GL viewport is set to the command's rect and the scissor to its
  * clip, so drawing to normalized device coordinates (-1..1) fills the rect.
@@ -39,14 +39,14 @@ typedef struct UIDrawCallbackInfo {
         f32 scale;              /* Framebuffer pixels per logical pixel */
 } UIDrawCallbackInfo;
 
-/*
+/**
  * Draws with any GL calls. It may change GL state freely; the renderer sets
  * its own state again afterwards. It runs during rendering, after the frame
  * was built, so data must live until then (e.g. in the frame arena).
  */
 typedef void (*UIDrawCallbackFn)(const UIDrawCallbackInfo *info, void *data);
 
-/*
+/**
  * One draw command in logical pixels. The UI core only produces these; the
  * renderer turns them into GL draw calls.
  */
@@ -58,7 +58,7 @@ typedef struct UIDrawCmd {
         UIColor color;          /* Fill, text or tint color */
         UIColor border_color;
         f32 border_width;
-        f32 corner_radius[4];
+        UICorners corner_radius;
 
         const char *text;       /* Not owned, lives in the frame arena */
         s32 text_len;

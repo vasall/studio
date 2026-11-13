@@ -12,7 +12,7 @@
  *
  ******************************************************************************/
 
-/*
+/**
  * Menus in the popup layer. Open one with ui_popup_open(ui, key, x, y),
  * then build it every frame:
  *
@@ -26,7 +26,7 @@ PUB s32 ui_menu_item(UI *ui, const char *label, const char *shortcut);
 PUB void ui_menu_separator(UI *ui);
 PUB void ui_menu_end(UI *ui);
 
-/*
+/**
  * A menu item that can show as selected (e.g. the current choice of a
  * dropdown). id is hashed, label is shown; ui_menu_item(ui, l, s) is
  * ui_menu_item_ex(ui, l, l, s, 0).

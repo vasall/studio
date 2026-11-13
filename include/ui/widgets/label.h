@@ -12,7 +12,7 @@
  *
  ******************************************************************************/
 
-/*
+/**
  * Text without interaction. cls defaults to "label".
  */
 PUB UIBox *ui_label(UI *ui, const char *text, const char *cls);

@@ -3,7 +3,7 @@
 
 #include <workbench/view.h>
 
-/*
+/**
  * A placeholder editor: an empty box with its name and a colored stripe,
  * so tabs can be told apart while moving them around.
  */

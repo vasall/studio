@@ -18,14 +18,14 @@
  *
  ******************************************************************************/
 
-/*
+/**
  * Meshes and objects are referenced by handle: a removed one is simply
  * skipped, so nothing dangles (e.g. an object whose mesh was replaced).
  */
 typedef PoolHandle SceneMesh;
 typedef PoolHandle SceneObject;
 
-/*
+/**
  * Triangle mesh data for scene_mesh_add. It is copied to the GPU, so the
  * arrays can be freed afterwards.
  */
@@ -39,7 +39,7 @@ typedef struct SceneMeshData {
         s32 index_count;
 } SceneMeshData;
 
-/*
+/**
  * A set of meshes on the GPU and objects that place them in the world.
  * Upload a mesh once (a part), then add objects (instances of the part)
  * and move them every frame with scene_object_set_transform, e.g. from
@@ -65,7 +65,7 @@ typedef struct Scene3D {
         UIColor background;
 } Scene3D;
 
-/*
+/**
  * One view into a scene: a camera and its own offscreen framebuffer
  * (multisampled, so edges are smooth). Several views can show one scene,
  * e.g. in split editors. Owned by whoever shows the view.
@@ -89,7 +89,7 @@ typedef struct SceneView {
  *
  ******************************************************************************/
 
-/*
+/**
  * Needs a current GL context. grid_step/grid_lines set the ground grid on
  * the XY plane (e.g. 10 mm, 20 lines each way); 0 lines means no grid.
  *
@@ -98,19 +98,19 @@ typedef struct SceneView {
 PUB s32 scene_init(Scene3D *scene, f32 grid_step, s32 grid_lines);
 PUB void scene_deinit(Scene3D *scene);
 
-/*
+/**
  * Upload a triangle mesh.
  *
  * @returns The mesh, or { POOL_HANDLE_NONE } on error
  */
 PUB SceneMesh scene_mesh_add(Scene3D *scene, const SceneMeshData *data);
 
-/*
+/**
  * Free a mesh. Objects that use it are no longer drawn.
  */
 PUB void scene_mesh_remove(Scene3D *scene, SceneMesh mesh);
 
-/*
+/**
  * Center and radius of a sphere around the mesh, in mesh coordinates.
  *
  * @returns 0, or -1 if the mesh doesn't exist
@@ -118,7 +118,7 @@ PUB void scene_mesh_remove(Scene3D *scene, SceneMesh mesh);
 PUB s32 scene_mesh_bounds(Scene3D *scene, SceneMesh mesh, FVector3 *center,
                 f32 *radius);
 
-/*
+/**
  * Place a mesh in the world with a transform (mesh to world) and a color.
  *
  * @returns The object, or { POOL_HANDLE_NONE } on error
@@ -134,14 +134,14 @@ PUB void scene_object_set_color(Scene3D *scene, SceneObject obj,
 PUB void scene_object_set_visible(Scene3D *scene, SceneObject obj,
                 s32 visible);
 
-/*
+/**
  * A view with a camera from camera_init and no framebuffer yet; that is
  * made on first draw. deinit needs the GL context.
  */
 PUB void scene_view_init(SceneView *view);
 PUB void scene_view_deinit(SceneView *view);
 
-/*
+/**
  * The viewport widget for a scene: ui_viewport with view's camera, drawing
  * scene. Scene and view must live until the frame is rendered.
  */

@@ -25,23 +25,39 @@ typedef struct UIColor {
 } UIColor;
 
 typedef enum UISizeKind {
-        UI_SIZE_FIT = 0,        /* Wrap content: children or text + padding */
-        UI_SIZE_PIXELS,         /* Fixed logical pixels */
-        UI_SIZE_PERCENT,        /* Of the parent's content box (0..1) */
-        UI_SIZE_GROW            /* Share of the leftover space, by weight */
+        UI_SIZE_FIT = 0, /* Wrap content: children or text + padding */
+        UI_SIZE_PIXELS,  /* Fixed logical pixels */
+        UI_SIZE_PERCENT, /* Of the parent's content box (0..1) */
+        UI_SIZE_GROW     /* Share of the leftover space, by weight */
 } UISizeKind;
 
 typedef struct UISize {
         u8 kind;
-        f32 value;              /* Pixels, percent (0..1) or grow weight */
+        f32 value; /* Pixels, percent (0..1) or grow weight */
         f32 min;
-        f32 max;                /* <= 0 means no limit */
+        f32 max; /* <= 0 means no limit */
 } UISize;
 
+/* Margin and padding, in logical pixels */
+typedef struct UISides {
+        f32 left;
+        f32 top;
+        f32 right;
+        f32 bottom;
+} UISides;
+
+/* Corner radii, clockwise from the top left */
+typedef struct UICorners {
+        f32 tl;
+        f32 tr;
+        f32 br;
+        f32 bl;
+} UICorners;
+
 typedef enum UILayout {
-        UI_LAYOUT_ROW = 0,      /* Children left to right */
-        UI_LAYOUT_COLUMN,       /* Children top to bottom */
-        UI_LAYOUT_STACK         /* Children on top of each other */
+        UI_LAYOUT_ROW = 0, /* Children left to right */
+        UI_LAYOUT_COLUMN,  /* Children top to bottom */
+        UI_LAYOUT_STACK    /* Children on top of each other */
 } UILayout;
 
 typedef enum UIAlign {
@@ -64,22 +80,6 @@ typedef enum UIFont {
         UI_FONT_COUNT
 } UIFont;
 
-/* Index order of per-side arrays */
-enum {
-        UI_LEFT = 0,
-        UI_TOP,
-        UI_RIGHT,
-        UI_BOTTOM
-};
-
-/* Index order of per-corner arrays */
-enum {
-        UI_TOP_LEFT = 0,
-        UI_TOP_RIGHT,
-        UI_BOTTOM_RIGHT,
-        UI_BOTTOM_LEFT
-};
-
 /* Axis index for size[2] / pos[2] arrays */
 enum {
         UI_AXIS_X = 0,
@@ -90,48 +90,48 @@ typedef struct UIStyle {
         UISize width;
         UISize height;
 
-        UIColor infill;         /* Background fill, a = 0 means none */
+        UIColor infill; /* Background fill, a = 0 means none */
         UIColor border_color;
-        f32 border_width;       /* Drawn inside the box */
-        f32 corner_radius[4];   /* Per corner, see UI_TOP_LEFT... */
+        f32 border_width;        /* Drawn inside the box */
+        UICorners corner_radius; /* Clamped to half the box size */
 
-        f32 margin[4];          /* Outside, per side, see UI_LEFT... */
-        f32 padding[4];         /* Inside, per side */
-        f32 gap;                /* Space between children */
+        UISides margin;  /* Outside */
+        UISides padding; /* Inside */
+        f32 gap;         /* Space between children */
 
-        u8 align_x;             /* UIAlign: children horizontally */
-        u8 align_y;             /* UIAlign: children vertically */
-        u8 layout;              /* UILayout */
-        u8 wrap;                /* Row/column: 0 = overflow, 1 = wrap */
-        u8 overflow;            /* UIOverflow, when not wrapping */
+        u8 align_x;  /* UIAlign: children horizontally */
+        u8 align_y;  /* UIAlign: children vertically */
+        u8 layout;   /* UILayout */
+        u8 wrap;     /* Row/column: 0 = overflow, 1 = wrap */
+        u8 overflow; /* UIOverflow, when not wrapping */
 
-        u8 font;                /* UIFont */
+        u8 font; /* UIFont */
         f32 font_size;
         UIColor text_color;
 } UIStyle;
 
-/*
+/**
  * One bit per style field. Theme classes and state overrides only apply the
  * fields whose bit is set.
  */
 typedef enum UIStyleField {
-        UI_FIELD_WIDTH          = 1 << 0,
-        UI_FIELD_HEIGHT         = 1 << 1,
-        UI_FIELD_INFILL         = 1 << 2,
-        UI_FIELD_BORDER_COLOR   = 1 << 3,
-        UI_FIELD_BORDER_WIDTH   = 1 << 4,
-        UI_FIELD_CORNER_RADIUS  = 1 << 5,
-        UI_FIELD_MARGIN         = 1 << 6,
-        UI_FIELD_PADDING        = 1 << 7,
-        UI_FIELD_GAP            = 1 << 8,
-        UI_FIELD_ALIGN_X        = 1 << 9,
-        UI_FIELD_ALIGN_Y        = 1 << 10,
-        UI_FIELD_LAYOUT         = 1 << 11,
-        UI_FIELD_WRAP           = 1 << 12,
-        UI_FIELD_OVERFLOW       = 1 << 13,
-        UI_FIELD_FONT           = 1 << 14,
-        UI_FIELD_FONT_SIZE      = 1 << 15,
-        UI_FIELD_TEXT_COLOR     = 1 << 16
+        UI_FIELD_WIDTH = 1 << 0,
+        UI_FIELD_HEIGHT = 1 << 1,
+        UI_FIELD_INFILL = 1 << 2,
+        UI_FIELD_BORDER_COLOR = 1 << 3,
+        UI_FIELD_BORDER_WIDTH = 1 << 4,
+        UI_FIELD_CORNER_RADIUS = 1 << 5,
+        UI_FIELD_MARGIN = 1 << 6,
+        UI_FIELD_PADDING = 1 << 7,
+        UI_FIELD_GAP = 1 << 8,
+        UI_FIELD_ALIGN_X = 1 << 9,
+        UI_FIELD_ALIGN_Y = 1 << 10,
+        UI_FIELD_LAYOUT = 1 << 11,
+        UI_FIELD_WRAP = 1 << 12,
+        UI_FIELD_OVERFLOW = 1 << 13,
+        UI_FIELD_FONT = 1 << 14,
+        UI_FIELD_FONT_SIZE = 1 << 15,
+        UI_FIELD_TEXT_COLOR = 1 << 16
 } UIStyleField;
 
 /******************************************************************************
@@ -157,17 +157,17 @@ PUB UIRect ui_rect_intersect(UIRect a, UIRect b);
 PUB s32 ui_rect_contains(UIRect r, f32 x, f32 y);
 
 /* Fill all four sides / corners with one value or four values */
-PUB void ui_sides(f32 out[4], f32 all);
-PUB void ui_sides4(f32 out[4], f32 l, f32 t, f32 r, f32 b);
-PUB void ui_radius(f32 out[4], f32 all);
-PUB void ui_radius4(f32 out[4], f32 tl, f32 tr, f32 br, f32 bl);
+PUB void ui_sides(UISides *out, f32 all);
+PUB void ui_sides4(UISides *out, f32 l, f32 t, f32 r, f32 b);
+PUB void ui_radius(UICorners *out, f32 all);
+PUB void ui_radius4(UICorners *out, f32 tl, f32 tr, f32 br, f32 bl);
 
-/*
+/**
  * The default style: fit size, row layout, no fill, no border, UI font.
  */
 PUB UIStyle ui_style_default(void);
 
-/*
+/**
  * Copy the fields selected by mask from src to dst.
  */
 PUB void ui_style_apply(UIStyle *dst, const UIStyle *src, u32 mask);

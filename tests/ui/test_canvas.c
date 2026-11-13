@@ -5,7 +5,7 @@
 #include <ui/widgets/canvas.h>
 #include <ui/ui.h>
 
-/*
+/**
  * A 200 x 100 canvas with padding 2, placed at (50, 20) by an outer box
  * with padding 50 20. Its drawing area starts at (52, 22) and is 196 x 96.
  */
@@ -108,7 +108,7 @@ void test_shapes_move_with_the_canvas_and_keep_order(void)
         TEST_ASSERT_EQUAL_FLOAT(22.0f, c->rect.y);
 
         c = s_cmd(2);
-        TEST_ASSERT_EQUAL_FLOAT(4.0f, c->corner_radius[UI_BOTTOM_LEFT]);
+        TEST_ASSERT_EQUAL_FLOAT(4.0f, c->corner_radius.bl);
         TEST_ASSERT_EQUAL_FLOAT(1.0f, c->border_width);
 }
 

@@ -12,7 +12,7 @@
  *
  ******************************************************************************/
 
-/*
+/**
  * One option of a radio group: sets *value = option when clicked. cls
  * defaults to "radio"; the parts use "radio-dot" and "radio-label".
  *

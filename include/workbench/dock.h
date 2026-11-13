@@ -87,63 +87,63 @@ struct Dock {
  *
  ******************************************************************************/
 
-/*
+/**
  * Start with one empty tab group.
  */
 PUB s32 dock_init(Dock *dock, Views *views, DockCloneFn clone,
                 void *clone_user);
 
-/*
+/**
  * Free the tree and destroy all views in it.
  */
 PUB void dock_deinit(Dock *dock);
 
-/*
+/**
  * Add a view as a tab to group (NULL = active group) and show it.
  */
 PUB void dock_open(Dock *dock, DockNode *group, ViewHandle view);
 
-/*
+/**
  * Close the tab at index in group and destroy its view.
  */
 PUB void dock_close(Dock *dock, DockNode *group, s32 index);
 
-/*
+/**
  * Close the shown tab of the active group.
  */
 PUB void dock_close_active(Dock *dock);
 
-/*
+/**
  * Put view into a new group on one side (zone LEFT/RIGHT/TOP/BOTTOM) of
  * group and make it active.
  */
 PUB DockNode *dock_split(Dock *dock, DockNode *group, u8 zone,
                 ViewHandle view);
 
-/*
+/**
  * Split the active group, with a copy of its shown view.
  */
 PUB void dock_split_active(Dock *dock, u8 zone);
 
-/*
+/**
  * Move view from one group to another place (see DockZone). Empty groups
  * are removed afterwards.
  */
 PUB void dock_move(Dock *dock, ViewHandle view, DockNode *from, DockNode *to,
                 u8 zone, s32 index);
 
-/*
+/**
  * Build the dock into the current parent (it fills it) and handle tab
  * clicks, drags, drops and splitters.
  */
 PUB void dock_build(Dock *dock, UI *ui);
 
-/*
+/**
  * The shown view of the active group (pool handle; invalid if none).
  */
 PUB ViewHandle dock_active_view(Dock *dock);
 
-/*
+/**
  * Number of tab groups.
  */
 PUB s32 dock_group_count(Dock *dock);

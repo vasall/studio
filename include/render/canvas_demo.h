@@ -6,7 +6,7 @@
 
 #include <ui/draw.h>
 
-/*
+/**
  * The smallest example of drawing into a canvas with own GL code
  * (ui_canvas_gl): a box drawn by its own shader, without vertex buffers.
  * Live plots will work the same way, with their samples in GPU buffers.
@@ -20,7 +20,7 @@ typedef struct CanvasDemoBox {
         UIColor color;
 } CanvasDemoBox;
 
-/*
+/**
  * A UIDrawCallbackFn; data is a CanvasDemoBox. The shader is built on first
  * use and lives as long as the GL context.
  */

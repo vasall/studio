@@ -5,7 +5,7 @@
 #include <ui/ui.h>
 #include <ui/widgets.h>
 
-/*
+/**
  * Layout tests with a fake font: every byte is 8 px wide, lines are 16 px.
  */
 
@@ -99,7 +99,7 @@ void test_column_with_gap_and_padding(void)
 
         c = s_container(UI_LAYOUT_COLUMN);
         c->style.gap = 10.0f;
-        ui_sides4(c->style.padding, 5, 7, 5, 7);
+        ui_sides4(&c->style.padding, 5, 7, 5, 7);
         a = s_child("a", ui_px(100), ui_px(50));
         b = s_child("b", ui_px(60), ui_px(20));
         s_finish();
@@ -157,7 +157,7 @@ void test_percent_of_content_box(void)
         UIBox *a;
 
         c = s_container(UI_LAYOUT_ROW);
-        ui_sides(c->style.padding, 50);
+        ui_sides(&c->style.padding, 50);
         a = s_child("a", ui_pct(0.5f), ui_pct(0.25f));
         s_finish();
 
@@ -173,7 +173,7 @@ void test_fit_wraps_children_and_padding(void)
         f = ui_box_begin(&s_ui, "fit", NULL, 0);
         f->style.layout = UI_LAYOUT_COLUMN;
         f->style.gap = 4.0f;
-        ui_sides(f->style.padding, 2);
+        ui_sides(&f->style.padding, 2);
         s_child("a", ui_px(30), ui_px(10));
         a = s_child("b", ui_px(50), ui_px(10));
         ui_box_end(&s_ui); /* fit */
@@ -189,7 +189,7 @@ void test_fit_text(void)
 
         s_container(UI_LAYOUT_ROW);
         l = ui_label(&s_ui, "Hello##id", NULL);
-        ui_sides4(l->style.padding, 4, 2, 4, 2);
+        ui_sides4(&l->style.padding, 4, 2, 4, 2);
         s_finish();
 
         TEST_ASSERT_EQUAL_INT(5, l->text_len);
@@ -203,7 +203,7 @@ void test_margins_add_space(void)
 
         s_container(UI_LAYOUT_ROW);
         a = s_child("a", ui_px(10), ui_px(10));
-        ui_sides4(a->style.margin, 3, 4, 5, 6);
+        ui_sides4(&a->style.margin, 3, 4, 5, 6);
         b = s_child("b", ui_px(10), ui_px(10));
         s_finish();
 
@@ -366,7 +366,7 @@ void test_fit_parent_counts_grow_children(void)
         s_container(UI_LAYOUT_STACK);
         menu = ui_box_begin(&s_ui, "menu", NULL, UI_BOX_FLOATING);
         menu->style.layout = UI_LAYOUT_COLUMN;
-        ui_sides(menu->style.padding, 4);
+        ui_sides(&menu->style.padding, 4);
         a = ui_label(&s_ui, "Short", NULL);
         a->style.width = ui_grow(1);
         b = ui_label(&s_ui, "A longer item", NULL);

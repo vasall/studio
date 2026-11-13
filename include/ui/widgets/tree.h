@@ -23,7 +23,7 @@ typedef struct UITreeRowResult {
  *
  ******************************************************************************/
 
-/*
+/**
  * A row of a tree: indent by depth, a chevron if it has children, an icon
  * and a label. A click on a row with children flips *expanded (expanded may
  * be NULL for leaves). The caller keeps the tree state, so rows can be

@@ -12,7 +12,7 @@
  *
  ******************************************************************************/
 
-/*
+/**
  * A drag handle between two areas. axis UI_AXIS_X resizes horizontally
  * (a vertical bar). It takes 1 px in the layout and a few more pixels of
  * the neighbors for grabbing; a 1 px line ("splitter-line") lights up on

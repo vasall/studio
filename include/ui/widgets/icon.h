@@ -12,7 +12,7 @@
  *
  ******************************************************************************/
 
-/*
+/**
  * Icon without interaction. cls defaults to "icon".
  */
 PUB UIBox *ui_icon(UI *ui, u16 icon, const char *cls);

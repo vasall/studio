@@ -12,7 +12,7 @@
  *
  ******************************************************************************/
 
-/*
+/**
  * A small pill with text, e.g. a count. cls defaults to "badge".
  */
 PUB UIBox *ui_badge(UI *ui, const char *text, const char *cls);

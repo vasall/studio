@@ -2,6 +2,7 @@
 
 #include <devkit/log/log.h>
 #include <devkit/memory/utf8.h>
+#include <devkit/util/helper.h>
 
 #include <render/gl_util.h>
 
@@ -26,15 +27,23 @@ enum {
  ******************************************************************************/
 
 typedef struct Draw2DVertex {
+        /* Position */
         f32 x;
         f32 y;
+        /* UV-coordinates */
         f32 u;
         f32 v;
         f32 lx; /* Relative to the rect center */
         f32 ly;
         f32 hw; /* Half size */
         f32 hh;
-        f32 radius[4];
+
+        /* Corner radii */
+        f32 r_tl; /* Same order as a_radius in ui.vert */
+        f32 r_tr;
+        f32 r_br;
+        f32 r_bl;
+
         f32 border;
         f32 mode;
         u8 color[4];
@@ -56,7 +65,7 @@ typedef struct Draw2DBatch {
 typedef struct Quad {
         f32 x0, y0, x1, y1; /* Framebuffer pixels */
         f32 u0, v0, u1, v1;
-        f32 radius[4];
+        f32 r_tl, r_tr, r_br, r_bl;
         f32 border;
         s32 mode;
         UIColor color;
@@ -290,7 +299,12 @@ LOC void s_push_quad(Draw2D *d, const Quad *q, GLuint tex, const s32 clip[4])
                 v[i].ly = y - cy;
                 v[i].hw = hw;
                 v[i].hh = hh;
-                memcpy(v[i].radius, q->radius, sizeof(v[i].radius));
+
+                v[i].r_tl = q->r_tl;
+                v[i].r_tr = q->r_tr;
+                v[i].r_br = q->r_br;
+                v[i].r_bl = q->r_bl;
+
                 v[i].border = q->border;
                 v[i].mode = (f32)q->mode;
                 v[i].color[0] = q->color.r;
@@ -325,7 +339,6 @@ LOC void s_rect_cmd(Draw2D *d, const UIDrawCmd *cmd, f32 s, const s32 clip[4])
 {
         Quad q;
         f32 max_r;
-        s32 i;
 
         memset(&q, 0, sizeof(q));
 
@@ -336,11 +349,13 @@ LOC void s_rect_cmd(Draw2D *d, const UIDrawCmd *cmd, f32 s, const s32 clip[4])
         q.y1 = roundf((cmd->rect.y + cmd->rect.h) * s);
         if(q.x1 <= q.x0 || q.y1 <= q.y0) return;
 
+        /* Corners */
         max_r = (q.x1 - q.x0 < q.y1 - q.y0 ? q.x1 - q.x0 : q.y1 - q.y0) * 0.5f;
-        for(i = 0; i < 4; i++) {
-                q.radius[i] = cmd->corner_radius[i] * s;
-                if(q.radius[i] > max_r) q.radius[i] = max_r;
-        }
+        q.r_tl = MIN(cmd->corner_radius.tl * s, max_r);
+        q.r_tr = MIN(cmd->corner_radius.tr * s, max_r);
+        q.r_br = MIN(cmd->corner_radius.br * s, max_r);
+        q.r_bl = MIN(cmd->corner_radius.bl * s, max_r);
+
         q.border = cmd->border_width > 0.0f ?
                            (cmd->border_width * s < 1.0f ?
                                     1.0f :
@@ -550,7 +565,7 @@ LOC void s_setup_vao(Draw2D *d)
         glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, stride, offset);
 
         glEnableVertexAttribArray(4);
-        offset = (void *)offsetof(Draw2DVertex, radius);
+        offset = (void *)offsetof(Draw2DVertex, r_tl);
         glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, stride, offset);
 
         glEnableVertexAttribArray(5);

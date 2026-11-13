@@ -4465,7 +4465,7 @@ static const stbi_uc stbi__zdefault_distance[32] =
 {
    5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
 };
-/*
+/**
 Init algorithm:
 {
    int i;   // use <= to match clearly with spec
@@ -7761,7 +7761,7 @@ STBIDEF int stbi_is_16_bit_from_callbacks(stbi_io_callbacks const *c, void *user
 
 #endif // STB_IMAGE_IMPLEMENTATION
 
-/*
+/**
    revision history:
       2.20  (2019-02-07) support utf8 filenames in Windows; fix warnings and platform ifdefs
       2.19  (2018-02-11) fix warning
@@ -7945,7 +7945,7 @@ STBIDEF int stbi_is_16_bit_from_callbacks(stbi_io_callbacks const *c, void *user
 */
 
 
-/*
+/**
 ------------------------------------------------------------------------------
 This software is available under 2 licenses -- choose whichever you prefer.
 ------------------------------------------------------------------------------

@@ -12,7 +12,7 @@
  *
  ******************************************************************************/
 
-/*
+/**
  * Horizontal slider for *value in [min, max]. Drag or click the track; while
  * focused, Left/Right step by 1/100 (Shift: 1/10), Home/End jump. cls
  * defaults to "slider"; the parts use "slider-track", "slider-fill" and

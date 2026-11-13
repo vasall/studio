@@ -43,8 +43,8 @@ PUB UICanvas *ui_canvas(UI *ui, const char *id, const char *cls)
                 area = s_content(box, &box->state->rect);
                 cv->width = area.w > 0.0f ? area.w : 0.0f;
                 cv->height = area.h > 0.0f ? area.h : 0.0f;
-                cv->sig.mouse_x -= box->style.padding[UI_LEFT];
-                cv->sig.mouse_y -= box->style.padding[UI_TOP];
+                cv->sig.mouse_x -= box->style.padding.left;
+                cv->sig.mouse_y -= box->style.padding.top;
 
                 /* Shapes sized from width/height are wrong in the first
                    frame, so draw another one */
@@ -68,14 +68,12 @@ PUB void ui_canvas_box(UICanvas *cv, UIRect r, UIColor fill, UIColor border,
                 f32 border_width, f32 radius)
 {
         UIDrawCmd *cmd;
-        s32 i;
 
         if(!cv || !(cmd = s_add(cv, UI_DRAW_RECT, r))) return;
         cmd->color = fill;
         cmd->border_color = border;
         cmd->border_width = border_width;
-        for(i = 0; i < 4; i++)
-                cmd->corner_radius[i] = radius;
+        ui_radius(&cmd->corner_radius, radius);
 }
 
 PUB void ui_canvas_gl(UICanvas *cv, UIRect r, UIDrawCallbackFn fn,
@@ -138,9 +136,9 @@ LOC UIDrawCmd *s_add(UICanvas *cv, u8 kind, UIRect r)
 /* rect without the box's padding */
 LOC UIRect s_content(const UIBox *box, const UIRect *rect)
 {
-        const f32 *p = box->style.padding;
+        const UISides *p = &box->style.padding;
 
-        return ui_rect(rect->x + p[UI_LEFT], rect->y + p[UI_TOP],
-                        rect->w - p[UI_LEFT] - p[UI_RIGHT],
-                        rect->h - p[UI_TOP] - p[UI_BOTTOM]);
+        return ui_rect(rect->x + p->left, rect->y + p->top,
+                        rect->w - p->left - p->right,
+                        rect->h - p->top - p->bottom);
 }

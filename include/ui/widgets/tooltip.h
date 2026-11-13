@@ -12,7 +12,7 @@
  *
  ******************************************************************************/
 
-/*
+/**
  * Show a tooltip for box after hovering for UI_TOOLTIP_DELAY.
  */
 PUB void ui_tooltip(UI *ui, UIBox *box, const char *text);

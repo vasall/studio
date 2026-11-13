@@ -23,7 +23,7 @@
 
 typedef struct View View;
 
-/*
+/**
  * What a kind of view can do. Anything shown in an editor tab is a view.
  */
 typedef struct ViewClass {
@@ -61,7 +61,7 @@ typedef struct Views {
 
 PUB s32 views_init(Views *views);
 
-/*
+/**
  * Destroy all views that are left.
  */
 PUB void views_deinit(Views *views);
@@ -69,7 +69,7 @@ PUB void views_deinit(Views *views);
 PUB ViewHandle view_create(Views *views, const ViewClass *cls,
                 const char *title, void *data);
 
-/*
+/**
  * The view, or NULL if it was destroyed.
  */
 PUB View *view_get(Views *views, ViewHandle h);

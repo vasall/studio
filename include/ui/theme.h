@@ -34,7 +34,7 @@ typedef enum UIState {
         UI_STATE_COUNT
 } UIState;
 
-/*
+/**
  * A named style class, e.g. "button" or "button.primary". Only the fields in
  * the masks are set; the rest comes from the parent class or the default.
  */
@@ -66,7 +66,7 @@ typedef struct UITheme {
 PUB s32 ui_theme_init(UITheme *theme);
 PUB void ui_theme_deinit(UITheme *theme);
 
-/*
+/**
  * Parse theme text and add its variables and classes. Lines look like:
  *
  *   # comment
@@ -81,32 +81,32 @@ PUB void ui_theme_deinit(UITheme *theme);
  */
 PUB s32 ui_theme_load_string(UITheme *theme, const char *text);
 
-/*
+/**
  * Load a theme file, see ui_theme_load_string.
  *
  * @returns The number of bad lines, or -1 if the file can't be read
  */
 PUB s32 ui_theme_load_file(UITheme *theme, const char *path);
 
-/*
+/**
  * Find a class by its full name, or NULL.
  */
 PUB const UIThemeClass *ui_theme_class(const UITheme *theme, const char *name);
 
-/*
+/**
  * Build the style for a class name. "a.b" applies "a", then "a.b". Then the
  * overrides of every state bit set in states (1 << UIState) are applied.
  * NULL or "" gives the default style.
  */
 PUB UIStyle ui_theme_style(const UITheme *theme, const char *name, u32 states);
 
-/*
+/**
  * Get a variable as a color ("accent" for $accent), or fallback.
  */
 PUB UIColor ui_theme_color(const UITheme *theme, const char *name,
                 UIColor fallback);
 
-/*
+/**
  * Get a variable as a number, or fallback.
  */
 PUB f32 ui_theme_number(const UITheme *theme, const char *name, f32 fallback);

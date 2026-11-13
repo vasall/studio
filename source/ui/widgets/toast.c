@@ -76,7 +76,7 @@ PUB void ui_toasts(UI *ui, f32 bottom)
         area->style.layout = UI_LAYOUT_COLUMN;
         area->style.align_x = UI_ALIGN_END;
         area->style.align_y = UI_ALIGN_END;
-        ui_sides4(area->style.padding, TOAST_MARGIN, TOAST_MARGIN,
+        ui_sides4(&area->style.padding, TOAST_MARGIN, TOAST_MARGIN,
                         TOAST_MARGIN, TOAST_MARGIN + bottom);
 
         for(i = 0; i < ui->toast_count; i++) {

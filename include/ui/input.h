@@ -13,7 +13,7 @@
 #define UI_INPUT_MAX_EVENTS 64
 #define UI_INPUT_TEXT_LEN   32
 
-/*
+/**
  * Keys. Printable ASCII keys use their lowercase character ('a', '1', '\\'),
  * everything else uses the codes below. The platform layer translates SDL
  * keycodes, so the UI core doesn't depend on SDL.
@@ -76,7 +76,7 @@ typedef enum UIEventKind {
         UI_EVENT_TEXT
 } UIEventKind;
 
-/*
+/**
  * One keyboard event. Keys and text are kept in one queue, so they can be
  * handled in the order they were typed.
  */
@@ -90,7 +90,7 @@ typedef struct UIEvent {
         char text[UI_INPUT_TEXT_LEN]; /* UTF-8, for UI_EVENT_TEXT */
 } UIEvent;
 
-/*
+/**
  * Input of one window for one frame, in logical pixels.
  */
 typedef struct UIInput {
@@ -118,18 +118,18 @@ typedef struct UIInput {
  *
  ******************************************************************************/
 
-/*
+/**
  * Clear the per-frame parts (pressed/released, wheel, events). Held buttons,
  * mouse position and modifiers stay.
  */
 PUB void ui_input_next_frame(UIInput *in);
 
-/*
+/**
  * Append an event. Returns 0, or -1 if the queue is full.
  */
 PUB s32 ui_input_push(UIInput *in, const UIEvent *ev);
 
-/*
+/**
  * Check if a key event matches a key and an exact set of modifiers.
  * Matches the keycode, or the physical key if scan isn't UI_SCAN_NONE.
  */

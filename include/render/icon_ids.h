@@ -1,7 +1,7 @@
 #ifndef VASALL_STUDIO_ICON_IDS_H
 #define VASALL_STUDIO_ICON_IDS_H
 
-/*
+/**
  * All icons in one place. The name table in render/icons.c must have the
  * same order; files are assets/icons/<name>_16.png and <name>_32.png.
  */

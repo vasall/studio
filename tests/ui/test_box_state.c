@@ -177,11 +177,11 @@ void test_theme_class_and_hover_state(void)
         s = ui_theme_style(&s_theme, "button.primary", 0);
         TEST_ASSERT_EQUAL_INT(UI_SIZE_PIXELS, s.height.kind);
         TEST_ASSERT_EQUAL_FLOAT(22.0f, s.height.value);
-        TEST_ASSERT_EQUAL_FLOAT(2.0f, s.padding[UI_LEFT]);
-        TEST_ASSERT_EQUAL_FLOAT(1.0f, s.padding[UI_TOP]);
+        TEST_ASSERT_EQUAL_FLOAT(2.0f, s.padding.left);
+        TEST_ASSERT_EQUAL_FLOAT(1.0f, s.padding.top);
         TEST_ASSERT_EQUAL_UINT8(0x20, s.infill.g);
         TEST_ASSERT_EQUAL_UINT8(255, s.infill.a);
-        TEST_ASSERT_EQUAL_FLOAT(3.0f, s.corner_radius[UI_BOTTOM_RIGHT]);
+        TEST_ASSERT_EQUAL_FLOAT(3.0f, s.corner_radius.br);
 
         s = ui_theme_style(&s_theme, "button.primary", 1u << UI_STATE_HOVER);
         TEST_ASSERT_EQUAL_UINT8(0x80, s.infill.a);

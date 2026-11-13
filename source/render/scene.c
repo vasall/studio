@@ -321,7 +321,7 @@ PUB UISignal scene_viewport(UI *ui, const char *id, Scene3D *scene,
  *
  ******************************************************************************/
 
-/*
+/**
  * Draw the scene into the view's multisampled framebuffer, resolve it and
  * copy it into the window at the viewport's place, clipped like the UI.
  */
@@ -502,7 +502,7 @@ LOC GLuint s_vertex_array(GLuint vbo, GLuint ebo)
         return vao;
 }
 
-/*
+/**
  * Interleave positions and normals. Without normals every triangle gets its
  * own three vertices with the face normal (flat shading).
  */
@@ -562,7 +562,7 @@ LOC f32 *s_build_vertices(const SceneMeshData *d, s32 *count_out)
         return v;
 }
 
-/*
+/**
  * Lines on the XY plane every step, lines + 1 each way, centered on the
  * origin. Every fifth is brighter; the X and Y axes are red and green.
  */

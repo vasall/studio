@@ -6,7 +6,7 @@
 #include <ui/widgets/scroll.h>
 #include <ui/widgets/viewport.h>
 
-/*
+/**
  * A 200 x 100 viewport with padding 1 at the top of a scroll area that is
  * taller than the window, so the wheel could scroll it.
  */

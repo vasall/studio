@@ -24,7 +24,7 @@ typedef struct AppWindow AppWindow;
 /* Builds the UI of a window for one frame (between ui_begin/end_frame) */
 typedef void (*AppFrameFn)(AppWindow *win, void *user);
 
-/*
+/**
  * One OS window with its own input and UI context. All windows share the
  * app's GL context and renderer.
  */
@@ -81,7 +81,7 @@ struct App {
  *
  ******************************************************************************/
 
-/*
+/**
  * Start SDL, find the assets, create the GL context (on a hidden window),
  * the renderer with its fonts and icons, and load the theme. Windows opened
  * afterwards all share this context.
@@ -91,7 +91,7 @@ struct App {
 PUB s32 app_init(App *app);
 PUB void app_deinit(App *app);
 
-/*
+/**
  * Open a window. The first one becomes the main window; closing it ends
  * the app.
  *
@@ -100,29 +100,29 @@ PUB void app_deinit(App *app);
 PUB AppWindow *app_window_open(App *app, const char *title, s32 w, s32 h,
                 AppFrameFn frame_fn, void *frame_user);
 
-/*
+/**
  * Run until the main window closes.
  */
 PUB void app_run(App *app);
 
-/*
+/**
  * Draw this window once more as soon as possible.
  */
 PUB void app_request_frame(AppWindow *win);
 
-/*
+/**
  * While at least one frame source is active, the window draws continuously
  * at display rate (e.g. live simulation, animations).
  */
 PUB void app_frame_source_begin(AppWindow *win);
 PUB void app_frame_source_end(AppWindow *win);
 
-/*
+/**
  * Wake the main loop from any thread; every window draws a frame.
  */
 PUB void app_wake(App *app);
 
-/*
+/**
  * Translate an SDL event into window input (platform/input.c).
  *
  * @returns 1 if the event changed the input

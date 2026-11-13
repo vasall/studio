@@ -12,7 +12,7 @@
  *
  ******************************************************************************/
 
-/*
+/**
  * Progress bar. value is 0..1; a negative value shows a moving bar for work
  * of unknown length (it draws continuously while shown). cls defaults to
  * "progress"; the bar uses "progress-fill".

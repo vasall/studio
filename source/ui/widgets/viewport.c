@@ -47,7 +47,7 @@ PUB UISignal ui_viewport(UI *ui, const char *id, Camera3D *cam,
         sig = ui_signal(ui, box);
         st = box->state;
 
-        /*
+        /**
          * Drags: user_i is the mode, user_f/user_t the mouse position of
          * the last frame, so every frame moves by the difference.
          */
@@ -121,9 +121,9 @@ LOC void s_draw(UI *ui, UIBox *box, void *data)
 
 LOC UIRect s_content(const UIBox *box, UIRect r)
 {
-        const f32 *p = box->style.padding;
+        const UISides *p = &box->style.padding;
 
-        return ui_rect(r.x + p[UI_LEFT], r.y + p[UI_TOP],
-                        r.w - p[UI_LEFT] - p[UI_RIGHT],
-                        r.h - p[UI_TOP] - p[UI_BOTTOM]);
+        return ui_rect(r.x + p->left, r.y + p->top,
+                        r.w - p->left - p->right,
+                        r.h - p->top - p->bottom);
 }

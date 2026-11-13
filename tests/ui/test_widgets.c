@@ -5,7 +5,7 @@
 #include <ui/ui.h>
 #include <ui/widgets.h>
 
-/*
+/**
  * Widgets driven headless: every frame calls the current builder, input is
  * set up between frames. Text is 8 px per byte, lines are 16 px.
  */

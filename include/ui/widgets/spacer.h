@@ -12,7 +12,7 @@
  *
  ******************************************************************************/
 
-/*
+/**
  * Empty box that takes space, e.g. ui_spacer(ui, ui_grow(1), ui_px(0)).
  */
 PUB UIBox *ui_spacer(UI *ui, UISize w, UISize h);

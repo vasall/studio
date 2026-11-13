@@ -375,7 +375,7 @@ LOC SceneMesh s_box_mesh(Scene3D *scene)
         return scene_mesh_add(scene, &d);
 }
 
-/*
+/**
  * A cylinder of radius 0.5 from z = 0 to 1, with normals: smooth sides,
  * flat caps (the caps have their own vertices).
  */

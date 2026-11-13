@@ -19,7 +19,7 @@
  *
  ******************************************************************************/
 
-/*
+/**
  * Changes to the tree found while building are queued and applied after
  * the build, so no node is freed while it is being walked.
  */
@@ -413,7 +413,7 @@ LOC void s_remove_view(DockNode *node, s32 index)
         if(node->active < 0) node->active = 0;
 }
 
-/*
+/**
  * Remove an empty group (not the last one) and fold splits that are left
  * with a single child.
  */
@@ -719,7 +719,7 @@ LOC void s_build_group(Dock *dock, UI *ui, BuildCtx *ctx, DockNode *node,
         ui_box_end(ui); /* editor-group */
 }
 
-/*
+/**
  * When the shown tab changes, scroll the tab bar so it is fully visible.
  * Uses last frame's rects; a new tab has none yet and waits a frame.
  */

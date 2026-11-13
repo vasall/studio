@@ -27,7 +27,7 @@ typedef struct UITextFieldResult {
  *
  ******************************************************************************/
 
-/*
+/**
  * Single-line text field that edits buf (UTF-8, cap bytes incl. the
  * terminator) in place. Mouse: click, drag and double-click to select.
  * Keys: arrows, Home/End, Backspace/Delete (with Ctrl by word), Shift to

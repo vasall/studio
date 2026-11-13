@@ -3,7 +3,7 @@
 #include <math.h>
 #include <string.h>
 
-#define CARET_BLINK 0.53        /* Seconds per half period */
+#define CARET_BLINK 0.53 /* Seconds per half period */
 #define CARET_WIDTH 1.0f
 
 /* What the draw callback needs, copied into the frame arena */
@@ -13,7 +13,7 @@ typedef struct TextDraw {
         s32 caret;
         s32 sel_lo;
         s32 sel_hi;
-        f32 scroll;             /* Text x shown at the left content edge */
+        f32 scroll; /* Text x shown at the left content edge */
         s32 focused;
         s32 show_caret;
         const char *placeholder;
@@ -38,8 +38,7 @@ LOC s32 s_word_left(const char *s, s32 i);
 LOC s32 s_word_right(const char *s, s32 len, s32 i);
 
 LOC void s_erase(char *buf, s32 *len, s32 lo, s32 hi);
-LOC s32 s_insert(char *buf, s32 *len, s32 cap, s32 at, const char *text,
-                s32 n);
+LOC s32 s_insert(char *buf, s32 *len, s32 cap, s32 at, const char *text, s32 n);
 
 /******************************************************************************
  *
@@ -47,8 +46,8 @@ LOC s32 s_insert(char *buf, s32 *len, s32 cap, s32 at, const char *text,
  *
  ******************************************************************************/
 
-PUB UITextFieldResult ui_text_field(UI *ui, const char *id, char *buf,
-                s32 cap, const char *placeholder, const char *cls)
+PUB UITextFieldResult ui_text_field(UI *ui, const char *id, char *buf, s32 cap,
+                                    const char *placeholder, const char *cls)
 {
         UITextFieldResult res;
         UIInput *in = ui->input;
@@ -74,12 +73,13 @@ PUB UITextFieldResult ui_text_field(UI *ui, const char *id, char *buf,
         f32 cx = 0.0f;
         f32 tw;
         f64 phase;
+        u32 flags;
 
         memset(&res, 0, sizeof(res));
         if(!buf || cap <= 0) return res;
 
-        box = ui_box(ui, id, cls ? cls : "text-field",
-                        UI_BOX_CLICKABLE | UI_BOX_FOCUSABLE);
+        flags = UI_BOX_CLICKABLE | UI_BOX_FOCUSABLE;
+        box = ui_box(ui, id, cls ? cls : "text-field", flags);
         if(!box) return res;
         s = &box->style;
         box->cursor = UI_CURSOR_TEXT;
@@ -88,8 +88,7 @@ PUB UITextFieldResult ui_text_field(UI *ui, const char *id, char *buf,
         /* One line of text high, if the class leaves the height open */
         line_h = s_line_height(ui, s);
         if(s->height.kind == UI_SIZE_FIT) {
-                s->height = ui_px(line_h + s->padding[UI_TOP] +
-                                s->padding[UI_BOTTOM]);
+                s->height = ui_px(line_h + s->padding.top + s->padding.bottom);
         }
 
         res.sig = ui_signal(ui, box);
@@ -103,8 +102,8 @@ PUB UITextFieldResult ui_text_field(UI *ui, const char *id, char *buf,
 
         /* Mouse, in text coordinates */
         if(res.sig.pressed || (ui->active == box->key && res.sig.dragging &&
-                                in && in->button_down[UI_MOUSE_LEFT])) {
-                f32 mx = res.sig.mouse_x - s->padding[UI_LEFT] + st->user_f;
+                               in && in->button_down[UI_MOUSE_LEFT])) {
+                f32 mx = res.sig.mouse_x - s->padding.left + st->user_f;
 
                 caret = s_hit(ui, s, buf, len, mx);
                 if(res.sig.pressed && !(in->mods & UI_MOD_SHIFT))
@@ -114,8 +113,7 @@ PUB UITextFieldResult ui_text_field(UI *ui, const char *id, char *buf,
                         n = caret < len ? caret : len - 1;
                         handled = s_class(buf[n]);
                         anchor = n;
-                        while(anchor > 0 && s_class(buf[anchor - 1]) ==
-                                        handled)
+                        while(anchor > 0 && s_class(buf[anchor - 1]) == handled)
                                 anchor--;
                         caret = n;
                         while(caret < len && s_class(buf[caret]) == handled)
@@ -135,7 +133,7 @@ PUB UITextFieldResult ui_text_field(UI *ui, const char *id, char *buf,
                         if(ev->kind == UI_EVENT_TEXT) {
                                 s_erase(buf, &len, lo, hi);
                                 n = s_insert(buf, &len, cap, lo, ev->text,
-                                                (s32)strlen(ev->text));
+                                             (s32)strlen(ev->text));
                                 caret = anchor = lo + n;
                                 res.changed |= n > 0 || lo != hi;
                                 ev->consumed = 1;
@@ -154,7 +152,7 @@ PUB UITextFieldResult ui_text_field(UI *ui, const char *id, char *buf,
                                         caret = lo;
                                 } else {
                                         caret = ctrl ? s_word_left(buf, caret) :
-                                                s_prev(buf, caret);
+                                                       s_prev(buf, caret);
                                 }
                                 if(!shift) anchor = caret;
                                 break;
@@ -164,8 +162,8 @@ PUB UITextFieldResult ui_text_field(UI *ui, const char *id, char *buf,
                                         caret = hi;
                                 } else {
                                         caret = ctrl ? s_word_right(buf, len,
-                                                        caret) :
-                                                s_next(buf, len, caret);
+                                                                    caret) :
+                                                       s_next(buf, len, caret);
                                 }
                                 if(!shift) anchor = caret;
                                 break;
@@ -183,7 +181,7 @@ PUB UITextFieldResult ui_text_field(UI *ui, const char *id, char *buf,
                         case UI_KEY_BACKSPACE:
                                 if(lo == hi) {
                                         lo = ctrl ? s_word_left(buf, caret) :
-                                                s_prev(buf, caret);
+                                                    s_prev(buf, caret);
                                 }
                                 res.changed |= lo != hi;
                                 s_erase(buf, &len, lo, hi);
@@ -193,8 +191,8 @@ PUB UITextFieldResult ui_text_field(UI *ui, const char *id, char *buf,
                         case UI_KEY_DELETE:
                                 if(lo == hi) {
                                         hi = ctrl ? s_word_right(buf, len,
-                                                        caret) :
-                                                s_next(buf, len, caret);
+                                                                 caret) :
+                                                    s_next(buf, len, caret);
                                 }
                                 res.changed |= lo != hi;
                                 s_erase(buf, &len, lo, hi);
@@ -221,7 +219,7 @@ PUB UITextFieldResult ui_text_field(UI *ui, const char *id, char *buf,
                                 if(!ctrl) goto plain;
                                 if(lo != hi && ui->clipboard_set) {
                                         ui->clipboard_set(ui->clipboard_user,
-                                                        buf + lo, hi - lo);
+                                                          buf + lo, hi - lo);
                                 }
                                 if(ev->key == 'x' && lo != hi) {
                                         s_erase(buf, &len, lo, hi);
@@ -236,7 +234,7 @@ PUB UITextFieldResult ui_text_field(UI *ui, const char *id, char *buf,
                                 clip = arena_alloc(&ui->arena, (size_t)cap);
                                 if(!clip) break;
                                 n = ui->clipboard_get(ui->clipboard_user, clip,
-                                                cap);
+                                                      cap);
                                 s_erase(buf, &len, lo, hi);
                                 n = s_insert(buf, &len, cap, lo, clip, n);
                                 caret = anchor = lo + n;
@@ -244,13 +242,13 @@ PUB UITextFieldResult ui_text_field(UI *ui, const char *id, char *buf,
                                 break;
 
                         default:
-                        plain:
+plain:
                                 /* Plain keys also come as text; swallow the
                                    key press so it isn't a shortcut, but leave
                                    Tab, F-keys and chords alone */
-                                handled = ev->key < UI_KEY_SPECIAL &&
-                                        !(ev->mods & (UI_MOD_CTRL |
-                                                      UI_MOD_ALT |
+                                handled =
+                                        ev->key < UI_KEY_SPECIAL &&
+                                        !(ev->mods & (UI_MOD_CTRL | UI_MOD_ALT |
                                                       UI_MOD_SUPER));
                                 break;
                         }
@@ -263,7 +261,7 @@ PUB UITextFieldResult ui_text_field(UI *ui, const char *id, char *buf,
         }
 
         /* Keep the caret in view */
-        view_w = st->rect.w - s->padding[UI_LEFT] - s->padding[UI_RIGHT];
+        view_w = st->rect.w - s->padding.left - s->padding.right;
         scroll = st->user_f;
         if(view_w > 0.0f) {
                 cx = s_width(ui, s, buf, caret);
@@ -299,14 +297,13 @@ PUB UITextFieldResult ui_text_field(UI *ui, const char *id, char *buf,
                 phase = (ui->time - st->user_t) / CARET_BLINK;
                 if(phase < 0.0) phase = 0.0;
                 if(td) td->show_caret = ((s64)phase % 2) == 0;
-                ui_request_wakeup(ui, st->user_t +
-                                (floor(phase) + 1.0) * CARET_BLINK);
+                ui_request_wakeup(ui, st->user_t + (floor(phase) + 1.0) *
+                                                           CARET_BLINK);
 
                 ui->text_input = 1;
-                ui->text_input_rect = ui_rect(st->rect.x +
-                                s->padding[UI_LEFT] + cx - scroll,
-                                st->rect.y + s->padding[UI_TOP],
-                                CARET_WIDTH, line_h);
+                ui->text_input_rect = ui_rect(
+                        st->rect.x + s->padding.left + cx - scroll,
+                        st->rect.y + s->padding.top, CARET_WIDTH, line_h);
         }
 
         if(res.changed) ui->changed = 1;
@@ -333,12 +330,10 @@ LOC void s_draw(UI *ui, UIBox *box, void *data)
         f32 a;
         f32 b;
 
-        content = ui_rect(box->rect.x + s->padding[UI_LEFT],
-                        box->rect.y + s->padding[UI_TOP],
-                        box->rect.w - s->padding[UI_LEFT] -
-                        s->padding[UI_RIGHT],
-                        box->rect.h - s->padding[UI_TOP] -
-                        s->padding[UI_BOTTOM]);
+        content = ui_rect(box->rect.x + s->padding.left,
+                          box->rect.y + s->padding.top,
+                          box->rect.w - s->padding.left - s->padding.right,
+                          box->rect.h - s->padding.top - s->padding.bottom);
         /* Room for the caret at the very end */
         content.w += CARET_WIDTH;
         clip = ui_rect_intersect(box->clip, content);
@@ -366,7 +361,7 @@ LOC void s_draw(UI *ui, UIBox *box, void *data)
         cmd.font_size = s->font_size;
         if(td->len > 0) {
                 cmd.rect = ui_rect(x0, y, s_width(ui, s, td->text, td->len),
-                                line_h);
+                                   line_h);
                 cmd.color = s->text_color;
                 cmd.text = td->text;
                 cmd.text_len = td->len;
@@ -375,8 +370,9 @@ LOC void s_draw(UI *ui, UIBox *box, void *data)
                 sub = ui_theme_style(ui->theme, "text-field-placeholder", 0);
                 cmd.text_len = ui_display_len(td->placeholder);
                 cmd.text = td->placeholder;
-                cmd.rect = ui_rect(content.x, y, s_width(ui, s, cmd.text,
-                                        cmd.text_len), line_h);
+                cmd.rect =
+                        ui_rect(content.x, y,
+                                s_width(ui, s, cmd.text, cmd.text_len), line_h);
                 cmd.color = sub.text_color.a ? sub.text_color : s->text_color;
                 ui_draw_push(ui, &cmd);
         }
@@ -384,8 +380,8 @@ LOC void s_draw(UI *ui, UIBox *box, void *data)
         if(td->show_caret) {
                 memset(&cmd, 0, sizeof(cmd));
                 cmd.kind = UI_DRAW_RECT;
-                cmd.rect = ui_rect(x0 + s_width(ui, s, td->text, td->caret),
-                                y, CARET_WIDTH, line_h);
+                cmd.rect = ui_rect(x0 + s_width(ui, s, td->text, td->caret), y,
+                                   CARET_WIDTH, line_h);
                 cmd.clip = clip;
                 cmd.color = s->text_color;
                 ui_draw_push(ui, &cmd);
@@ -428,7 +424,8 @@ LOC s32 s_prev(const char *s, s32 i)
 {
         if(i <= 0) return 0;
         i--;
-        while(i > 0 && ((u8)s[i] & 0xc0) == 0x80) i--;
+        while(i > 0 && ((u8)s[i] & 0xc0) == 0x80)
+                i--;
         return i;
 }
 
@@ -437,7 +434,8 @@ LOC s32 s_next(const char *s, s32 len, s32 i)
 {
         if(i >= len) return len;
         i++;
-        while(i < len && ((u8)s[i] & 0xc0) == 0x80) i++;
+        while(i < len && ((u8)s[i] & 0xc0) == 0x80)
+                i++;
         return i;
 }
 
@@ -446,7 +444,8 @@ LOC s32 s_snap(const char *s, s32 len, s32 i)
 {
         if(i < 0) return 0;
         if(i > len) return len;
-        while(i > 0 && i < len && ((u8)s[i] & 0xc0) == 0x80) i--;
+        while(i > 0 && i < len && ((u8)s[i] & 0xc0) == 0x80)
+                i--;
         return i;
 }
 
@@ -466,10 +465,12 @@ LOC s32 s_word_left(const char *s, s32 i)
 {
         s32 cls;
 
-        while(i > 0 && s_class(s[i - 1]) == 0) i--;
+        while(i > 0 && s_class(s[i - 1]) == 0)
+                i--;
         if(i == 0) return 0;
         cls = s_class(s[i - 1]);
-        while(i > 0 && s_class(s[i - 1]) == cls) i--;
+        while(i > 0 && s_class(s[i - 1]) == cls)
+                i--;
         return i;
 }
 
@@ -480,9 +481,11 @@ LOC s32 s_word_right(const char *s, s32 len, s32 i)
         if(i >= len) return len;
         cls = s_class(s[i]);
         if(cls != 0) {
-                while(i < len && s_class(s[i]) == cls) i++;
+                while(i < len && s_class(s[i]) == cls)
+                        i++;
         }
-        while(i < len && s_class(s[i]) == 0) i++;
+        while(i < len && s_class(s[i]) == 0)
+                i++;
         return i;
 }
 
@@ -493,14 +496,13 @@ LOC void s_erase(char *buf, s32 *len, s32 lo, s32 hi)
         *len -= hi - lo;
 }
 
-/*
+/**
  * Insert text at at, dropping control characters (newlines become spaces)
  * and whatever doesn't fit; never splits a code point.
  *
  * @returns Bytes inserted
  */
-LOC s32 s_insert(char *buf, s32 *len, s32 cap, s32 at, const char *text,
-                s32 n)
+LOC s32 s_insert(char *buf, s32 *len, s32 cap, s32 at, const char *text, s32 n)
 {
         s32 room = cap - 1 - *len;
         s32 out = 0;
@@ -511,8 +513,11 @@ LOC s32 s_insert(char *buf, s32 *len, s32 cap, s32 at, const char *text,
 
         while(i < n && text[i]) {
                 c = (u8)text[i];
-                cp_len = c < 0x80 ? 1 : c >= 0xf0 ? 4 : c >= 0xe0 ? 3 :
-                        c >= 0xc0 ? 2 : 1;
+                cp_len = c < 0x80  ? 1 :
+                         c >= 0xf0 ? 4 :
+                         c >= 0xe0 ? 3 :
+                         c >= 0xc0 ? 2 :
+                                     1;
                 if(i + cp_len > n) break;
                 if(c < 0x20 || c == 0x7f) {
                         if(c != '\n' && c != '\t') {
@@ -524,7 +529,7 @@ LOC s32 s_insert(char *buf, s32 *len, s32 cap, s32 at, const char *text,
                 if(out + cp_len > room) break;
 
                 memmove(buf + at + out + cp_len, buf + at + out,
-                                (size_t)(*len - at - out + 1));
+                        (size_t)(*len - at - out + 1));
                 if(cp_len == 1) {
                         buf[at + out] = (char)c;
                 } else {

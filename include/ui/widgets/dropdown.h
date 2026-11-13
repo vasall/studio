@@ -12,7 +12,7 @@
  *
  ******************************************************************************/
 
-/*
+/**
  * A button that shows items[*selected] and opens a list of the items in the
  * popup layer. Enter, Space or Down open it while focused. cls defaults to
  * "dropdown".

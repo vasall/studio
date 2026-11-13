@@ -4,7 +4,7 @@
 
 #include <string.h>
 
-/*
+/**
  * Layout in three steps, see the plan "Layout solver":
  *
  *   for x, then y:
@@ -92,7 +92,7 @@ PUB void ui_layout(UIBox *root, UIMeasureFn measure,
  *
  ******************************************************************************/
 
-/*
+/**
  * Bottom-up: set size[a] of fixed and FIT boxes. PERCENT and GROW boxes get
  * their min here and their real size from the parent in s_solve.
  */
@@ -163,7 +163,7 @@ LOC void s_fit(LayoutCtx *ctx, UIBox *box, s32 a)
         }
 }
 
-/*
+/**
  * Top-down: box->size[a] is final, set the sizes of its children.
  */
 LOC void s_solve(UIBox *box, s32 a)
@@ -290,7 +290,7 @@ LOC void s_solve(UIBox *box, s32 a)
                         free_space -= given;
                 }
 
-                /*
+                /**
                  * Shrink FIT and GROW children towards their min. Children
                  * of a scrolling box keep their size and scroll instead.
                  */
@@ -367,7 +367,7 @@ LOC void s_solve(UIBox *box, s32 a)
         }
 }
 
-/*
+/**
  * Top-down: positions and clip rects. box->rect and box->clip are set.
  */
 LOC void s_place(UIBox *box)
@@ -532,7 +532,7 @@ LOC void s_place(UIBox *box)
                                         c->size[0], c->size[1]);
                         c->pos[0] = c->float_x - origin[0];
                         c->pos[1] = c->float_y - origin[1];
-                        /*
+                        /**
                          * Floating boxes are not moved by scrolling, but
                          * stay inside the parent's visible area (popups sit
                          * on a layer root, which is the whole window)
@@ -553,22 +553,38 @@ LOC s32 s_main_axis(const UIBox *box)
 
 LOC f32 s_pad_lo(const UIBox *box, s32 a)
 {
-        return box->style.padding[a == UI_AXIS_X ? UI_LEFT : UI_TOP];
+        if(a == UI_AXIS_X) {
+                return box->style.padding.left;
+        } else {
+                return box->style.padding.top;
+        }
 }
 
 LOC f32 s_pad_hi(const UIBox *box, s32 a)
 {
-        return box->style.padding[a == UI_AXIS_X ? UI_RIGHT : UI_BOTTOM];
+        if(a == UI_AXIS_X) {
+                return box->style.padding.right;
+        } else {
+                return box->style.padding.bottom;
+        }
 }
 
 LOC f32 s_margin_lo(const UIBox *box, s32 a)
 {
-        return box->style.margin[a == UI_AXIS_X ? UI_LEFT : UI_TOP];
+        if(a == UI_AXIS_X) {
+                return box->style.margin.left;
+        } else {
+                return box->style.margin.top;
+        }
 }
 
 LOC f32 s_margin_hi(const UIBox *box, s32 a)
 {
-        return box->style.margin[a == UI_AXIS_X ? UI_RIGHT : UI_BOTTOM];
+        if(a == UI_AXIS_X) {
+                return box->style.margin.right;
+        } else {
+                return box->style.margin.bottom;
+        }
 }
 
 /* Size including margins */
@@ -577,7 +593,7 @@ LOC f32 s_outer(const UIBox *box, s32 a)
         return box->size[a] + s_margin_lo(box, a) + s_margin_hi(box, a);
 }
 
-/*
+/**
  * Size including margins, as seen by a FIT parent: GROW children count with
  * their content size, so a fitting menu is as wide as its widest item.
  */

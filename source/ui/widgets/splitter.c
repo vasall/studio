@@ -24,12 +24,12 @@ PUB f32 ui_splitter(UI *ui, const char *id, s32 axis, const char *cls)
         if(axis == UI_AXIS_X) {
                 box->style.width = ui_px(5.0f);
                 box->style.height = ui_grow(1.0f);
-                ui_sides4(box->style.margin, -2.0f, 0.0f, -2.0f, 0.0f);
+                ui_sides4(&box->style.margin, -2.0f, 0.0f, -2.0f, 0.0f);
                 box->cursor = UI_CURSOR_RESIZE_EW;
         } else {
                 box->style.width = ui_grow(1.0f);
                 box->style.height = ui_px(5.0f);
-                ui_sides4(box->style.margin, 0.0f, -2.0f, 0.0f, -2.0f);
+                ui_sides4(&box->style.margin, 0.0f, -2.0f, 0.0f, -2.0f);
                 box->cursor = UI_CURSOR_RESIZE_NS;
         }
 

@@ -21,7 +21,7 @@ PUB Path path_append(Path p1, const char *p);
 /* ret_path = p1 + p2 */
 PUB Path path_join(Path p1, Path p2);
 
-/*
+/**
  * Normalize a path without touching the file system:
  *
  *   "home/test/.///folder"  ->  "home/test/folder"   "." and empty parts go

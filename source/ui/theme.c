@@ -23,8 +23,8 @@ LOC s32 s_parse_field(const UITheme *theme, UIStyle *style, u32 *mask,
 LOC s32 s_parse_color(const UITheme *theme, const char *value, UIColor *out);
 LOC s32 s_parse_size(const char *value, UISize *out);
 LOC s32 s_parse_numbers(const char *value, f32 *out, s32 max);
-LOC s32 s_parse_sides(const char *value, f32 out[4]);
-LOC s32 s_parse_corners(const char *value, f32 out[4]);
+LOC s32 s_parse_sides(const char *value, UISides *out);
+LOC s32 s_parse_corners(const char *value, UICorners *out);
 LOC s32 s_parse_enum(const char *value, const char **names, s32 count);
 LOC char *s_trim(char *str);
 LOC void s_copy(char *dst, const char *src, s32 size);
@@ -367,13 +367,13 @@ LOC s32 s_parse_field(const UITheme *theme, UIStyle *style, u32 *mask,
                         return -1;
                 *mask |= UI_FIELD_BORDER_WIDTH;
         } else if(strcmp(field, "corner-radius") == 0) {
-                if(s_parse_corners(value, style->corner_radius) < 0) return -1;
+                if(s_parse_corners(value, &style->corner_radius) < 0) return -1;
                 *mask |= UI_FIELD_CORNER_RADIUS;
         } else if(strcmp(field, "margin") == 0) {
-                if(s_parse_sides(value, style->margin) < 0) return -1;
+                if(s_parse_sides(value, &style->margin) < 0) return -1;
                 *mask |= UI_FIELD_MARGIN;
         } else if(strcmp(field, "padding") == 0) {
-                if(s_parse_sides(value, style->padding) < 0) return -1;
+                if(s_parse_sides(value, &style->padding) < 0) return -1;
                 *mask |= UI_FIELD_PADDING;
         } else if(strcmp(field, "gap") == 0) {
                 if(s_parse_numbers(value, &style->gap, 1) != 1) return -1;
@@ -499,7 +499,7 @@ LOC s32 s_parse_numbers(const char *value, f32 *out, s32 max)
 }
 
 /* CSS order: all | vertical horizontal | top right bottom left */
-LOC s32 s_parse_sides(const char *value, f32 out[4])
+LOC s32 s_parse_sides(const char *value, UISides *out)
 {
         f32 n[4];
         s32 count = s_parse_numbers(value, n, 4);
@@ -517,7 +517,7 @@ LOC s32 s_parse_sides(const char *value, f32 out[4])
 }
 
 /* all | top-left top-right bottom-right bottom-left */
-LOC s32 s_parse_corners(const char *value, f32 out[4])
+LOC s32 s_parse_corners(const char *value, UICorners *out)
 {
         f32 n[4];
         s32 count = s_parse_numbers(value, n, 4);

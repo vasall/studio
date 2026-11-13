@@ -27,7 +27,7 @@ typedef enum ShellPanelTab {
         SHELL_PANEL_COUNT
 } ShellPanelTab;
 
-/*
+/**
  * The workbench of one window: menu bar, activity bar, side bar, editor
  * area (dock), bottom panel and status bar.
  */
@@ -53,13 +53,13 @@ typedef struct Workbench {
  *
  ******************************************************************************/
 
-/*
+/**
  * Set up the workbench with a few dummy tabs in two groups.
  */
 PUB s32 workbench_init(Workbench *wb, AppWindow *win);
 PUB void workbench_deinit(Workbench *wb);
 
-/*
+/**
  * Frame callback for app_window_open (user = Workbench).
  */
 PUB void workbench_frame(AppWindow *win, void *user);

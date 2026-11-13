@@ -12,7 +12,7 @@
  *
  ******************************************************************************/
 
-/*
+/**
  * A virtualized list: only the rows in view are built. Every row must be
  * exactly row_height tall.
  */
@@ -30,7 +30,7 @@ typedef struct UIList {
  *
  ******************************************************************************/
 
-/*
+/**
  * Virtualized list of count rows, row_height each:
  *
  *   UIList list = ui_list_begin(ui, "files", count, 22, NULL);
@@ -48,7 +48,7 @@ PUB UIList ui_list_begin(UI *ui, const char *id, s32 count, f32 row_height,
                 const char *cls);
 PUB void ui_list_end(UI *ui, UIList *list);
 
-/*
+/**
  * Scroll so that row index is fully visible (from the next frame on).
  */
 PUB void ui_list_scroll_to(UI *ui, UIList *list, s32 index);

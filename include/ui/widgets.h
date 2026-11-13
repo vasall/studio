@@ -1,7 +1,7 @@
 #ifndef VASALL_STUDIO_UI_WIDGETS_H
 #define VASALL_STUDIO_UI_WIDGETS_H
 
-/*
+/**
  * All widgets. Each one has its own header in ui/widgets/; include those
  * directly to pull in only what a file uses.
  */

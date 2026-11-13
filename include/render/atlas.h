@@ -15,7 +15,7 @@
  *
  ******************************************************************************/
 
-/*
+/**
  * One cached bitmap (glyph or icon) in the atlas.
  */
 typedef struct AtlasEntry {
@@ -28,7 +28,7 @@ typedef struct AtlasEntry {
         f32 advance;            /* Glyphs: pen advance in pixels */
 } AtlasEntry;
 
-/*
+/**
  * A single-channel texture that glyphs and icons are packed into on first
  * use, row by row ("shelves"). When it is full it is flushed and refilled.
  */
@@ -54,12 +54,12 @@ typedef struct Atlas {
 PUB s32 atlas_init(Atlas *atlas, s32 size);
 PUB void atlas_deinit(Atlas *atlas);
 
-/*
+/**
  * Find a cached entry, or NULL.
  */
 PUB const AtlasEntry *atlas_find(Atlas *atlas, u64 key);
 
-/*
+/**
  * Add a bitmap of w x h bytes (one byte per pixel) under key. If it doesn't
  * fit, the atlas is flushed first (all old entries are gone).
  *
@@ -68,7 +68,7 @@ PUB const AtlasEntry *atlas_find(Atlas *atlas, u64 key);
 PUB const AtlasEntry *atlas_add(Atlas *atlas, u64 key, s32 w, s32 h,
                 const u8 *pixels, f32 xoff, f32 yoff, f32 advance);
 
-/*
+/**
  * Remove all entries.
  */
 PUB void atlas_flush(Atlas *atlas);

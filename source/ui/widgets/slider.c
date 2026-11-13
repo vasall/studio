@@ -43,8 +43,8 @@ PUB s32 ui_slider(UI *ui, const char *id, f32 *value, f32 min, f32 max,
 
         /* Travel of the thumb's left edge, from last frame's rect */
         if(box->state) {
-                w = box->state->rect.w - box->style.padding[UI_LEFT] -
-                        box->style.padding[UI_RIGHT] - thumb_w;
+                w = box->state->rect.w - box->style.padding.left -
+                        box->style.padding.right - thumb_w;
                 if(box->state->rect.w <= 0.0f) ui->changed = 1;
         }
         if(w < 0.0f) w = 0.0f;
@@ -52,7 +52,7 @@ PUB s32 ui_slider(UI *ui, const char *id, f32 *value, f32 min, f32 max,
         /* Mouse: the thumb's center follows the pointer */
         if(ui->active == box->key && ui->input->button_down[UI_MOUSE_LEFT] &&
            w > 0.0f) {
-                t = (sig.mouse_x - box->style.padding[UI_LEFT] -
+                t = (sig.mouse_x - box->style.padding.left -
                      thumb_w * 0.5f) / w;
                 *value = min + CLAMP(t, 0.0f, 1.0f) * range;
         }
@@ -81,18 +81,18 @@ PUB s32 ui_slider(UI *ui, const char *id, f32 *value, f32 min, f32 max,
 
         track = ui_box(ui, NULL, "slider-track", 0);
         track->style.width = ui_grow(1.0f);
-        ui_sides4(track->style.margin, thumb_w * 0.5f, 0.0f,
+        ui_sides4(&track->style.margin, thumb_w * 0.5f, 0.0f,
                         thumb_w * 0.5f, 0.0f);
 
         fill = ui_box(ui, NULL, "slider-fill", 0);
         fill->style.width = ui_px(t * w);
-        fill->style.margin[UI_LEFT] = thumb_w * 0.5f;
+        fill->style.margin.left = thumb_w * 0.5f;
 
         lit = ui->hot == box->key || ui->active == box->key ||
                 ui->focus == box->key;
         thumb = ui_box(ui, NULL, "slider-thumb", lit ? UI_BOX_SELECTED : 0);
         thumb->style.width = ui_px(thumb_w);
-        thumb->style.margin[UI_LEFT] = t * w;
+        thumb->style.margin.left = t * w;
         ui_box_end(ui); /* slider */
 
         if(*value != old) {

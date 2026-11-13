@@ -12,7 +12,7 @@
  *
  ******************************************************************************/
 
-/*
+/**
  * A box that scrolls its children, with scrollbar thumbs that can be
  * dragged. Style it like any box (size, layout); overflow is set to scroll.
  * The thumbs use the class "<cls>-thumb" if the theme has it, else

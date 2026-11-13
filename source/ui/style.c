@@ -96,30 +96,30 @@ PUB s32 ui_rect_contains(UIRect r, f32 x, f32 y)
         return x >= r.x && y >= r.y && x < r.x + r.w && y < r.y + r.h;
 }
 
-PUB void ui_sides(f32 out[4], f32 all)
+PUB void ui_sides(UISides *out, f32 all)
 {
         ui_sides4(out, all, all, all, all);
 }
 
-PUB void ui_sides4(f32 out[4], f32 l, f32 t, f32 r, f32 b)
+PUB void ui_sides4(UISides *out, f32 l, f32 t, f32 r, f32 b)
 {
-        out[UI_LEFT] = l;
-        out[UI_TOP] = t;
-        out[UI_RIGHT] = r;
-        out[UI_BOTTOM] = b;
+        out->left = l;
+        out->top = t;
+        out->right = r;
+        out->bottom = b;
 }
 
-PUB void ui_radius(f32 out[4], f32 all)
+PUB void ui_radius(UICorners *out, f32 all)
 {
         ui_radius4(out, all, all, all, all);
 }
 
-PUB void ui_radius4(f32 out[4], f32 tl, f32 tr, f32 br, f32 bl)
+PUB void ui_radius4(UICorners *out, f32 tl, f32 tr, f32 br, f32 bl)
 {
-        out[UI_TOP_LEFT] = tl;
-        out[UI_TOP_RIGHT] = tr;
-        out[UI_BOTTOM_RIGHT] = br;
-        out[UI_BOTTOM_LEFT] = bl;
+        out->tl = tl;
+        out->tr = tr;
+        out->br = br;
+        out->bl = bl;
 }
 
 PUB UIStyle ui_style_default(void)
@@ -138,25 +138,55 @@ PUB UIStyle ui_style_default(void)
 
 PUB void ui_style_apply(UIStyle *dst, const UIStyle *src, u32 mask)
 {
-        if(mask & UI_FIELD_WIDTH) dst->width = src->width;
-        if(mask & UI_FIELD_HEIGHT) dst->height = src->height;
-        if(mask & UI_FIELD_INFILL) dst->infill = src->infill;
-        if(mask & UI_FIELD_BORDER_COLOR) dst->border_color = src->border_color;
-        if(mask & UI_FIELD_BORDER_WIDTH) dst->border_width = src->border_width;
-        if(mask & UI_FIELD_CORNER_RADIUS)
-                memcpy(dst->corner_radius, src->corner_radius,
-                                sizeof(dst->corner_radius));
-        if(mask & UI_FIELD_MARGIN)
-                memcpy(dst->margin, src->margin, sizeof(dst->margin));
-        if(mask & UI_FIELD_PADDING)
-                memcpy(dst->padding, src->padding, sizeof(dst->padding));
-        if(mask & UI_FIELD_GAP) dst->gap = src->gap;
-        if(mask & UI_FIELD_ALIGN_X) dst->align_x = src->align_x;
-        if(mask & UI_FIELD_ALIGN_Y) dst->align_y = src->align_y;
-        if(mask & UI_FIELD_LAYOUT) dst->layout = src->layout;
-        if(mask & UI_FIELD_WRAP) dst->wrap = src->wrap;
-        if(mask & UI_FIELD_OVERFLOW) dst->overflow = src->overflow;
-        if(mask & UI_FIELD_FONT) dst->font = src->font;
-        if(mask & UI_FIELD_FONT_SIZE) dst->font_size = src->font_size;
-        if(mask & UI_FIELD_TEXT_COLOR) dst->text_color = src->text_color;
+        if(mask & UI_FIELD_WIDTH) {
+                dst->width = src->width;
+        }
+        if(mask & UI_FIELD_HEIGHT) {
+                dst->height = src->height;
+        }
+        if(mask & UI_FIELD_INFILL) {
+                dst->infill = src->infill;
+        }
+        if(mask & UI_FIELD_BORDER_COLOR) {
+                dst->border_color = src->border_color;
+        }
+        if(mask & UI_FIELD_BORDER_WIDTH) {
+                dst->border_width = src->border_width;
+        }
+        if(mask & UI_FIELD_CORNER_RADIUS) {
+                dst->corner_radius = src->corner_radius;
+        }
+        if(mask & UI_FIELD_MARGIN) {
+                dst->margin = src->margin;
+        }
+        if(mask & UI_FIELD_PADDING) {
+                dst->padding = src->padding;
+        }
+        if(mask & UI_FIELD_GAP) {
+                dst->gap = src->gap;
+        }
+        if(mask & UI_FIELD_ALIGN_X) {
+                dst->align_x = src->align_x;
+        }
+        if(mask & UI_FIELD_ALIGN_Y) {
+                dst->align_y = src->align_y;
+        }
+        if(mask & UI_FIELD_LAYOUT) {
+                dst->layout = src->layout;
+        }
+        if(mask & UI_FIELD_WRAP) {
+                dst->wrap = src->wrap;
+        }
+        if(mask & UI_FIELD_OVERFLOW) {
+                dst->overflow = src->overflow;
+        }
+        if(mask & UI_FIELD_FONT) {
+                dst->font = src->font;
+        }
+        if(mask & UI_FIELD_FONT_SIZE) {
+                dst->font_size = src->font_size;
+        }
+        if(mask & UI_FIELD_TEXT_COLOR) {
+                dst->text_color = src->text_color;
+        }
 }

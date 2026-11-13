@@ -34,7 +34,7 @@ PUB void ui_progress(UI *ui, const char *id, f32 value, const char *cls)
                 len = w * 0.3f;
                 phase = (f32)fmod(ui->time, 1.5) / 1.5f;
                 fill->style.width = ui_px(len);
-                fill->style.margin[UI_LEFT] = phase * (w + len) - len;
+                fill->style.margin.left = phase * (w + len) - len;
                 ui->changed = 1;
         }
         ui_box_end(ui); /* progress */

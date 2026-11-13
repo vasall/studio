@@ -13,6 +13,7 @@
 #include <ui/input.h>
 #include <ui/style.h>
 #include <ui/theme.h>
+#include <ui/clipboard.h>
 
 /******************************************************************************
  *
@@ -34,7 +35,7 @@
  *
  ******************************************************************************/
 
-/*
+/**
  * Root trees of a window, drawn and hit-tested in this order (later ones are
  * on top).
  */
@@ -73,7 +74,7 @@ typedef enum UIToastKind {
         UI_TOAST_ERROR
 } UIToastKind;
 
-/*
+/**
  * Identity of a box across frames: its id hashed with the parent's seed (see
  * ui_box). Boxes are rebuilt every frame, so the key, not a pointer, links a
  * box to its state and to hot/active/focus. 0 means no box (anonymous).
@@ -91,14 +92,7 @@ typedef f32 (*UIMeasureFn)(void *user, u8 font, f32 size, const char *text,
                 s32 len);
 typedef f32 (*UILineHeightFn)(void *user, u8 font, f32 size);
 
-/*
- * Clipboard of the platform. get copies at most cap - 1 bytes into buf and
- * terminates it; it returns the length.
- */
-typedef s32 (*UIClipboardGetFn)(void *user, char *buf, s32 cap);
-typedef void (*UIClipboardSetFn)(void *user, const char *text, s32 len);
-
-/*
+/**
  * State of a box that survives between frames, found by the box's key.
  * Freed when the box isn't built for a frame.
  */
@@ -155,7 +149,7 @@ struct UIBox {
         UIRect clip;            /* Visible part */
 };
 
-/*
+/**
  * What happened to a box this frame. Based on the rect from last frame.
  */
 typedef struct UISignal {
@@ -251,7 +245,7 @@ struct UI {
  *
  ******************************************************************************/
 
-/*
+/**
  * Initialize a UI context. measure and line_height are used to size text.
  *
  * @returns 0 on success, -1 on error
@@ -261,13 +255,13 @@ PUB s32 ui_init(UI *ui, const UITheme *theme, UIMeasureFn measure,
 
 PUB void ui_deinit(UI *ui);
 
-/*
+/**
  * Start a frame. Creates one root per layer with the window size.
  */
 PUB void ui_begin_frame(UI *ui, UIInput *input, f32 width, f32 height,
                 f64 time);
 
-/*
+/**
  * Finish a frame: layout, hit testing, draw list (ui->cmds), state cleanup.
  *
  * @returns 1 if another frame should follow right away (hover changed,
@@ -275,13 +269,13 @@ PUB void ui_begin_frame(UI *ui, UIInput *input, f32 width, f32 height,
  */
 PUB s32 ui_end_frame(UI *ui);
 
-/*
+/**
  * Build into another layer until ui_layer_end.
  */
 PUB void ui_layer_begin(UI *ui, UILayer layer);
 PUB void ui_layer_end(UI *ui);
 
-/*
+/**
  * Create a box as the last child of the current parent. id may be NULL for
  * an anonymous box (no state, no input). cls is the theme class (may be
  * NULL). The style starts as the class style, with state overrides from
@@ -290,46 +284,55 @@ PUB void ui_layer_end(UI *ui);
  */
 PUB UIBox *ui_box(UI *ui, const char *id, const char *cls, u32 flags);
 
-/*
+/**
  * Like ui_box, and make the new box the current parent.
+ * The typical use of these functions looks something like this:
+ *
+ * ```
+ * ui_box_begin(ui, "row", "toolbar", 0);
+ *      ui_box(ui, "a", "icon", 0);
+ *      ui_box(ui, "b", "icon", 0);
+ * ui_box_end(ui);
+ * ```
  */
 PUB UIBox *ui_box_begin(UI *ui, const char *id, const char *cls, u32 flags);
 PUB void ui_box_end(UI *ui);
+
 
 PUB void ui_push_parent(UI *ui, UIBox *box);
 PUB void ui_pop_parent(UI *ui);
 PUB UIBox *ui_parent(UI *ui);
 
-/*
+/**
  * Mix a number or pointer into the ids of the boxes created until
  * ui_pop_id, so lists can reuse the same id strings.
  */
 PUB void ui_push_id(UI *ui, u64 seed);
 PUB void ui_pop_id(UI *ui);
 
-/*
+/**
  * Set the text of a box. The text is copied into the frame arena; only the
  * part before "##" is shown.
  */
 PUB void ui_box_set_text(UI *ui, UIBox *box, const char *text);
 
-/*
+/**
  * Get the state of a box by key (from last frame), or NULL.
  */
 PUB UIBoxState *ui_state_of(UI *ui, UIBoxKey key);
 
-/*
+/**
  * Interaction with a box this frame.
  */
 PUB UISignal ui_signal(UI *ui, UIBox *box);
 
-/*
+/**
  * Keyboard focus. A press on a box that isn't focusable clears it, Tab and
  * Shift+Tab move it between UI_BOX_FOCUSABLE boxes, Esc clears it.
  */
 PUB void ui_set_focus(UI *ui, UIBoxKey key);
 
-/*
+/**
  * Take one unhandled key press (marking it consumed) if the box with key
  * has focus. For widgets that react to keys while focused.
  *
@@ -337,7 +340,7 @@ PUB void ui_set_focus(UI *ui, UIBoxKey key);
  */
 PUB s32 ui_take_key(UI *ui, UIBoxKey key, u32 k, u16 mods);
 
-/*
+/**
  * Take this frame's mouse wheel if the box with key is hovered, so no scroll
  * area scrolls with it. wx/wy may be NULL.
  *
@@ -345,12 +348,12 @@ PUB s32 ui_take_key(UI *ui, UIBoxKey key, u32 k, u16 mods);
  */
 PUB s32 ui_take_wheel(UI *ui, UIBoxKey key, f32 *wx, f32 *wy);
 
-/*
+/**
  * Ask for a frame at time t (seconds), e.g. for a delayed tooltip.
  */
 PUB void ui_request_wakeup(UI *ui, f64 t);
 
-/*
+/**
  * Popups: one is open at a time. It closes on a click outside of the popup
  * layer or with ui_popup_close.
  */
@@ -358,22 +361,22 @@ PUB void ui_popup_open(UI *ui, UIBoxKey key, f32 x, f32 y);
 PUB void ui_popup_close(UI *ui);
 PUB s32 ui_popup_is_open(UI *ui, UIBoxKey key);
 
-/*
+/**
  * Key of a box id under the current parent, without creating the box.
  */
 PUB UIBoxKey ui_key(UI *ui, const char *id);
 
-/*
+/**
  * Add a draw command (used by custom draw callbacks).
  */
 PUB void ui_draw_push(UI *ui, const UIDrawCmd *cmd);
 
-/*
+/**
  * Text before "##". Returns the length to show.
  */
 PUB s32 ui_display_len(const char *text);
 
-/*
+/**
  * Lay out a box tree (layout.c). Exposed for tests.
  */
 PUB void ui_layout(UIBox *root, UIMeasureFn measure,

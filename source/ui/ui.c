@@ -87,8 +87,9 @@ PUB void ui_begin_frame(UI *ui, UIInput *input, f32 width, f32 height,
 
         if(ui->wakeup > 0.0 && ui->wakeup <= time) ui->wakeup = 0.0;
 
-        for(i = 0; i < UI_LAYER_COUNT; i++)
+        for(i = 0; i < UI_LAYER_COUNT; i++) {
                 ui->roots[i] = s_new_root(ui, i);
+        }
 
         ui->parents[0] = ui->roots[UI_LAYER_BASE];
         ui->depth = 1;
@@ -249,6 +250,7 @@ PUB void ui_layer_end(UI *ui)
 {
         ui_pop_parent(ui);
 }
+
 
 PUB UIBox *ui_box(UI *ui, const char *id, const char *cls, u32 flags)
 {
@@ -593,17 +595,16 @@ LOC void s_emit(UI *ui, UIBox *box)
                 cmd.color = s->infill;
                 cmd.border_color = s->border_color;
                 cmd.border_width = s->border_width;
-                memcpy(cmd.corner_radius, s->corner_radius,
-                                sizeof(cmd.corner_radius));
+                cmd.corner_radius = s->corner_radius;
                 ui_draw_push(ui, &cmd);
         }
 
         if(visible && (box->icon || (box->text && box->text_len > 0))) {
                 /* Icon and text sit in the content box, aligned as a block */
-                cx = box->rect.x + s->padding[UI_LEFT];
-                cy = box->rect.y + s->padding[UI_TOP];
-                cw = box->rect.w - s->padding[UI_LEFT] - s->padding[UI_RIGHT];
-                ch = box->rect.h - s->padding[UI_TOP] - s->padding[UI_BOTTOM];
+                cx = box->rect.x + s->padding.left;
+                cy = box->rect.y + s->padding.top;
+                cw = box->rect.w - s->padding.left - s->padding.right;
+                ch = box->rect.h - s->padding.top - s->padding.bottom;
 
                 if(box->text && box->text_len > 0) {
                         text_w = ui->measure ? ui->measure(ui->measure_user,
@@ -690,6 +691,7 @@ LOC void s_scroll_into_view(UI *ui, UIBox *box)
 {
         UIBox *p;
         UIBoxState *st;
+        UISides *pad;
         f32 lo[2];
         f32 hi[2];
         f32 vlo;
@@ -704,18 +706,20 @@ LOC void s_scroll_into_view(UI *ui, UIBox *box)
         for(p = box->parent; p; p = p->parent) {
                 st = p->state;
                 if(p->style.overflow != UI_OVERFLOW_SCROLL || !st) continue;
+                pad = &p->style.padding;
 
                 for(a = 0; a < 2; a++) {
-                        vlo = (a == 0 ? p->rect.x : p->rect.y) +
-                                p->style.padding[a == 0 ? UI_LEFT : UI_TOP];
+                        f32 padv = (a == 0) ? pad->left : pad->top;
+                        vlo = (a == 0 ? p->rect.x : p->rect.y) + padv;
                         vhi = vlo + st->view[a];
                         if(hi[a] - lo[a] > vhi - vlo || lo[a] < vlo) {
                                 st->scroll[a] -= vlo - lo[a];
                         } else if(hi[a] > vhi) {
                                 st->scroll[a] += hi[a] - vhi;
                         }
-                        if(st->scroll[a] > st->content[a] - st->view[a])
+                        if(st->scroll[a] > st->content[a] - st->view[a]) {
                                 st->scroll[a] = st->content[a] - st->view[a];
+                        }
                         if(st->scroll[a] < 0.0f) st->scroll[a] = 0.0f;
                 }
                 ui->changed = 1;
@@ -729,9 +733,10 @@ LOC void s_focus_step(UI *ui, s32 dir)
         s32 n = 0;
         s32 cur = -1;
         s32 i;
+        s64 size;
 
-        boxes = arena_alloc(&ui->arena, sizeof(UIBox *) *
-                        (size_t)(ui->box_count + 1));
+        size = sizeof(UIBox *) * (size_t)(ui->box_count + 1);
+        boxes = arena_alloc(&ui->arena, size);
         if(!boxes) return;
 
         /* With a popup open, Tab stays inside it */

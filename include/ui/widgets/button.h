@@ -12,13 +12,13 @@
  *
  ******************************************************************************/
 
-/*
+/**
  * Text button. label is also the id ("Save##toolbar" shows "Save").
  * cls defaults to "button".
  */
 PUB UISignal ui_button(UI *ui, const char *label, const char *cls);
 
-/*
+/**
  * Icon button with an optional tooltip. cls defaults to "icon-button".
  */
 PUB UISignal ui_icon_button(UI *ui, const char *id, u16 icon,

@@ -14,7 +14,7 @@
 
 typedef struct UICanvasShape UICanvasShape;
 
-/*
+/**
  * A box to draw 2D shapes into, e.g. graphs. Shapes use canvas coordinates:
  * logical pixels from the top left corner of the canvas' content box (inside
  * its padding), y pointing down. Everything is clipped to the content box
@@ -45,7 +45,7 @@ typedef struct UICanvas {
  *
  ******************************************************************************/
 
-/*
+/**
  * Create a canvas. Size and background come from the class (default
  * "canvas") or canvas->box->style.
  *
@@ -56,19 +56,19 @@ typedef struct UICanvas {
  */
 PUB UICanvas *ui_canvas(UI *ui, const char *id, const char *cls);
 
-/*
+/**
  * A filled rectangle.
  */
 PUB void ui_canvas_rect(UICanvas *cv, UIRect r, UIColor fill);
 
-/*
+/**
  * A rectangle with fill, border (drawn inside r) and rounded corners. A fill
  * with alpha 0 draws only the outline.
  */
 PUB void ui_canvas_box(UICanvas *cv, UIRect r, UIColor fill, UIColor border,
                 f32 border_width, f32 radius);
 
-/*
+/**
  * Draw r with own GL code: fn runs while the frame is rendered, with the
  * viewport set to r and the scissor to the visible part of the canvas (see
  * UIDrawCallbackFn). data must live until then, e.g. in the frame arena or

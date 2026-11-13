@@ -12,7 +12,7 @@
  *
  ******************************************************************************/
 
-/*
+/**
  * A box with a check mark and a label. Toggles *value on click, or with
  * Space while focused. cls defaults to "checkbox"; the parts use
  * "checkbox-box" and "checkbox-label".

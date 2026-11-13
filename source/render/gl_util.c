@@ -29,8 +29,9 @@ PUB GLuint gl_program_from_files(const char *vert_path, const char *frag_path)
 
         vs_src = file_read(vert_path, NULL);
         fs_src = file_read(frag_path, NULL);
-        if(vs_src && fs_src)
+        if(vs_src && fs_src) {
                 prog = gl_program_from_source(vs_src, fs_src, vert_path);
+        }
 
         free(vs_src);
         free(fs_src);
