@@ -1,5 +1,5 @@
-#ifndef VASALL_STUDIO_UI_CANVAS_H
-#define VASALL_STUDIO_UI_CANVAS_H
+#ifndef VASALL_STUDIO_UI_WIDGETS_CANVAS_H
+#define VASALL_STUDIO_UI_WIDGETS_CANVAS_H
 
 #include <devkit/scope.h>
 #include <devkit/types.h>
@@ -77,4 +77,4 @@ PUB void ui_canvas_box(UICanvas *cv, UIRect r, UIColor fill, UIColor border,
 PUB void ui_canvas_gl(UICanvas *cv, UIRect r, UIDrawCallbackFn fn,
                 void *data);
 
-#endif /* VASALL_STUDIO_UI_CANVAS_H */
+#endif /* VASALL_STUDIO_UI_WIDGETS_CANVAS_H */

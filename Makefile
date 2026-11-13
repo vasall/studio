@@ -50,6 +50,7 @@ EXT_OBJ := $(patsubst external/%.c,$(BUILD_DIR)/ext/%.o,$(EXT_SRC))
 
 # Objects that don't need a window or GL, so tests can link them
 HEADLESS_OBJ := $(filter $(BUILD_DIR)/obj/core/% $(BUILD_DIR)/obj/ui/%,$(OBJ)) \
+	$(BUILD_DIR)/obj/render/camera.o \
 	$(BUILD_DIR)/obj/workbench/dock.o \
 	$(BUILD_DIR)/obj/workbench/view.o \
 	$(BUILD_DIR)/obj/workbench/dummy_view.o

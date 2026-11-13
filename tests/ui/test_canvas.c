@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-#include <ui/canvas.h>
+#include <ui/widgets/canvas.h>
 #include <ui/ui.h>
 
 /*

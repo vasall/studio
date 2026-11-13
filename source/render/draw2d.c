@@ -213,6 +213,10 @@ PUB void draw2d_render(Draw2D *d, List *cmds, f32 scale, s32 fb_w, s32 fb_h)
                         info.y = b->rect[1];
                         info.w = b->rect[2];
                         info.h = b->rect[3];
+                        info.clip_x = b->clip[0];
+                        info.clip_y = b->clip[1];
+                        info.clip_w = b->clip[2];
+                        info.clip_h = b->clip[3];
                         info.fb_w = fb_w;
                         info.fb_h = fb_h;
                         info.scale = scale;

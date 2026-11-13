@@ -330,6 +330,22 @@ PUB UISignal ui_signal(UI *ui, UIBox *box);
 PUB void ui_set_focus(UI *ui, UIBoxKey key);
 
 /*
+ * Take one unhandled key press (marking it consumed) if the box with key
+ * has focus. For widgets that react to keys while focused.
+ *
+ * @returns 1 if there was such a key press
+ */
+PUB s32 ui_take_key(UI *ui, UIBoxKey key, u32 k, u16 mods);
+
+/*
+ * Take this frame's mouse wheel if the box with key is hovered, so no scroll
+ * area scrolls with it. wx/wy may be NULL.
+ *
+ * @returns 1 if the wheel moved
+ */
+PUB s32 ui_take_wheel(UI *ui, UIBoxKey key, f32 *wx, f32 *wy);
+
+/*
  * Ask for a frame at time t (seconds), e.g. for a delayed tooltip.
  */
 PUB void ui_request_wakeup(UI *ui, f64 t);

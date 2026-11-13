@@ -1,8 +1,9 @@
 #include <workbench/gallery_view.h>
 
 #include <render/canvas_demo.h>
+#include <render/scene.h>
 #include <render/icon_ids.h>
-#include <ui/canvas.h>
+#include <ui/widgets/canvas.h>
 #include <ui/widgets.h>
 
 #include <math.h>
@@ -51,6 +52,13 @@ typedef struct Gallery {
         s32 shadows;
         s32 busy;
         s32 animate;
+
+        /* 3D viewport, made on first draw (needs the GL context) */
+        s32 scene_state;        /* 0 not yet, 1 ready, -1 failed */
+        Scene3D scene;
+        SceneView view;
+        SceneObject spinner;
+        s32 spin;
         s32 units;
         char name[64];
         char search[128];
@@ -81,6 +89,12 @@ LOC void s_text(Gallery *g, UI *ui);
 LOC void s_values(Gallery *g, UI *ui);
 LOC void s_badges(UI *ui);
 LOC void s_canvas(Gallery *g, UI *ui);
+LOC void s_viewport(Gallery *g, UI *ui);
+LOC s32 s_scene_setup(Gallery *g);
+LOC SceneMesh s_box_mesh(Scene3D *scene);
+LOC SceneMesh s_cylinder_mesh(Scene3D *scene, s32 segments);
+LOC FMatrix4 s_place(f32 x, f32 y, f32 z, f32 sx, f32 sy, f32 sz, f32 rz);
+LOC void s_reset_view(Gallery *g);
 LOC void s_tree_and_list(Gallery *g, UI *ui);
 
 const ViewClass gallery_view_class = {
@@ -141,6 +155,7 @@ LOC void s_draw(View *view, UI *ui, UIBox *area)
         s_values(g, ui);
         s_badges(ui);
         s_canvas(g, ui);
+        s_viewport(g, ui);
         s_tree_and_list(g, ui);
         ui_scroll_end(ui);
 }
@@ -153,6 +168,12 @@ LOC u16 s_icon(View *view)
 
 LOC void s_destroy(View *view)
 {
+        Gallery *g = view->data;
+
+        if(g && g->scene_state == 1) {
+                scene_view_deinit(&g->view);
+                scene_deinit(&g->scene);
+        }
         free(view->data);
         view->data = NULL;
 }
@@ -263,6 +284,192 @@ LOC void s_values(Gallery *g, UI *ui)
         ui_label(ui, "Material", "gallery-text");
         ui_box_end(ui); /* gallery-row */
         ui_box_end(ui); /* gallery-section */
+}
+
+LOC void s_viewport(Gallery *g, UI *ui)
+{
+        f32 angle;
+
+        s_section(ui, "3D viewport");
+        if(g->scene_state == 0) g->scene_state = s_scene_setup(g) < 0 ? -1 : 1;
+
+        if(g->scene_state == 1) {
+                g->scene.background = ui_theme_color(ui->theme, "background",
+                                ui_hex(0x161616ff));
+                if(g->spin) {
+                        /* Moving objects every frame, as live simulation
+                           data will */
+                        angle = (f32)fmod(ui->time, 6.283185307);
+                        scene_object_set_transform(&g->scene, g->spinner,
+                                        s_place(0, 0, 66, 24, 24, 24, angle));
+                        ui->changed = 1;
+                }
+                scene_viewport(ui, "viewport", &g->scene, &g->view, NULL);
+        } else {
+                ui_label(ui, "The 3D scene could not be created",
+                                "gallery-text");
+        }
+
+        s_row(ui);
+        ui_checkbox(ui, "Spin", &g->spin, NULL);
+        if(ui_button(ui, "Reset view", NULL).clicked) s_reset_view(g);
+        ui_label(ui, "Drag to orbit, Shift + drag or middle drag to pan, "
+                        "wheel to zoom.", "gallery-hint");
+        ui_box_end(ui); /* gallery-row */
+        ui_box_end(ui); /* gallery-section */
+}
+
+/* A small assembly: a plate, a column on it and a cube on top */
+LOC s32 s_scene_setup(Gallery *g)
+{
+        SceneMesh box;
+        SceneMesh cyl;
+
+        if(scene_init(&g->scene, 10.0f, 30) < 0) return -1;
+        scene_view_init(&g->view);
+        s_reset_view(g);
+
+        box = s_box_mesh(&g->scene);
+        cyl = s_cylinder_mesh(&g->scene, 48);
+
+        scene_object_add(&g->scene, box, s_place(0, 0, 3, 120, 80, 6, 0),
+                        ui_hex(0x8d8d8dff));
+        scene_object_add(&g->scene, cyl, s_place(0, 0, 6, 14, 14, 48, 0),
+                        ui_hex(0x4589ffff));
+        g->spinner = scene_object_add(&g->scene, box,
+                        s_place(0, 0, 66, 24, 24, 24, 0), ui_hex(0x42be65ff));
+        return 0;
+}
+
+LOC void s_reset_view(Gallery *g)
+{
+        camera_init(&g->view.camera);
+        camera_frame(&g->view.camera, fvec3(0.0f, 0.0f, 30.0f), 80.0f);
+}
+
+/* A unit cube around the origin; no normals, so it is shaded flat */
+LOC SceneMesh s_box_mesh(Scene3D *scene)
+{
+        static const f32 pos[8 * 3] = {
+                -0.5f, -0.5f, -0.5f,   0.5f, -0.5f, -0.5f,
+                 0.5f,  0.5f, -0.5f,  -0.5f,  0.5f, -0.5f,
+                -0.5f, -0.5f,  0.5f,   0.5f, -0.5f,  0.5f,
+                 0.5f,  0.5f,  0.5f,  -0.5f,  0.5f,  0.5f
+        };
+        /* Counter-clockwise seen from outside */
+        static const u32 idx[12 * 3] = {
+                0, 2, 1,  0, 3, 2,      /* bottom */
+                4, 5, 6,  4, 6, 7,      /* top */
+                0, 1, 5,  0, 5, 4,      /* front (-Y) */
+                2, 3, 7,  2, 7, 6,      /* back */
+                1, 2, 6,  1, 6, 5,      /* right (+X) */
+                3, 0, 4,  3, 4, 7       /* left */
+        };
+        SceneMeshData d;
+
+        memset(&d, 0, sizeof(d));
+        d.positions = pos;
+        d.indices = idx;
+        d.vertex_count = 8;
+        d.index_count = 36;
+        return scene_mesh_add(scene, &d);
+}
+
+/*
+ * A cylinder of radius 0.5 from z = 0 to 1, with normals: smooth sides,
+ * flat caps (the caps have their own vertices).
+ */
+LOC SceneMesh s_cylinder_mesh(Scene3D *scene, s32 segments)
+{
+        SceneMeshData d;
+        SceneMesh mesh = { POOL_HANDLE_NONE };
+        f32 *pos;
+        f32 *nrm;
+        u32 *idx;
+        s32 nv = (segments + 1) * 2 + (segments + 2) * 2;
+        s32 ni = segments * 6 + segments * 3 * 2;
+        s32 v = 0;
+        s32 k = 0;
+        s32 cap;
+        s32 i;
+        s32 c;
+        f32 a;
+
+        pos = malloc((size_t)nv * 3 * sizeof(f32));
+        nrm = malloc((size_t)nv * 3 * sizeof(f32));
+        idx = malloc((size_t)ni * sizeof(u32));
+        if(!pos || !nrm || !idx) {
+                free(pos);
+                free(nrm);
+                free(idx);
+                return mesh;
+        }
+
+#define VERT(px, py, pz, nx, ny, nz) do { \
+                pos[v * 3] = (px); pos[v * 3 + 1] = (py); pos[v * 3 + 2] = (pz); \
+                nrm[v * 3] = (nx); nrm[v * 3 + 1] = (ny); nrm[v * 3 + 2] = (nz); \
+                v++; } while(0)
+
+        /* Sides: a bottom and top vertex per step, normals point outwards */
+        for(i = 0; i <= segments; i++) {
+                a = (f32)i / (f32)segments * 6.2831853f;
+                VERT(0.5f * cosf(a), 0.5f * sinf(a), 0.0f, cosf(a), sinf(a), 0);
+                VERT(0.5f * cosf(a), 0.5f * sinf(a), 1.0f, cosf(a), sinf(a), 0);
+        }
+        for(i = 0; i < segments; i++) {
+                u32 b = (u32)(i * 2);
+
+                idx[k++] = b;
+                idx[k++] = b + 2;
+                idx[k++] = b + 3;
+                idx[k++] = b;
+                idx[k++] = b + 3;
+                idx[k++] = b + 1;
+        }
+
+        /* Caps: a center and a ring each */
+        for(cap = 0; cap < 2; cap++) {
+                f32 z = (f32)cap;
+                f32 nz = cap ? 1.0f : -1.0f;
+                u32 center = (u32)v;
+
+                VERT(0.0f, 0.0f, z, 0.0f, 0.0f, nz);
+                for(i = 0; i <= segments; i++) {
+                        a = (f32)i / (f32)segments * 6.2831853f;
+                        VERT(0.5f * cosf(a), 0.5f * sinf(a), z, 0, 0, nz);
+                }
+                for(i = 0; i < segments; i++) {
+                        c = (s32)center + 1 + i;
+                        idx[k++] = center;
+                        idx[k++] = (u32)(cap ? c : c + 1);
+                        idx[k++] = (u32)(cap ? c + 1 : c);
+                }
+        }
+#undef VERT
+
+        memset(&d, 0, sizeof(d));
+        d.positions = pos;
+        d.normals = nrm;
+        d.indices = idx;
+        d.vertex_count = v;
+        d.index_count = k;
+        mesh = scene_mesh_add(scene, &d);
+        free(pos);
+        free(nrm);
+        free(idx);
+        return mesh;
+}
+
+/* Translate * rotate around Z * scale */
+LOC FMatrix4 s_place(f32 x, f32 y, f32 z, f32 sx, f32 sy, f32 sz, f32 rz)
+{
+        FMatrix4 s = fmat4_identity();
+
+        s.data[0] = sx;
+        s.data[5] = sy;
+        s.data[10] = sz;
+        return fmat4_mul(fmat4_translation(fvec4(x, y, z, 1.0f)),
+                        fmat4_mul(fmat4_rotation_z(rz), s));
 }
 
 LOC void s_canvas(Gallery *g, UI *ui)

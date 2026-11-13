@@ -388,6 +388,35 @@ PUB void ui_set_focus(UI *ui, UIBoxKey key)
         ui->focus = key;
 }
 
+PUB s32 ui_take_key(UI *ui, UIBoxKey key, u32 k, u16 mods)
+{
+        UIInput *in = ui->input;
+        s32 i;
+
+        if(!in || !key || ui->focus != key) return 0;
+        for(i = 0; i < in->event_count; i++) {
+                if(ui_event_is_key(&in->events[i], k, UI_SCAN_NONE, mods)) {
+                        in->events[i].consumed = 1;
+                        return 1;
+                }
+        }
+        return 0;
+}
+
+PUB s32 ui_take_wheel(UI *ui, UIBoxKey key, f32 *wx, f32 *wy)
+{
+        UIInput *in = ui->input;
+
+        if(!in || !key || ui->hot != key) return 0;
+        if(in->wheel_x == 0.0f && in->wheel_y == 0.0f) return 0;
+
+        if(wx) *wx = in->wheel_x;
+        if(wy) *wy = in->wheel_y;
+        in->wheel_x = 0.0f;
+        in->wheel_y = 0.0f;
+        return 1;
+}
+
 PUB void ui_request_wakeup(UI *ui, f64 t)
 {
         if(ui->wakeup == 0.0 || t < ui->wakeup) ui->wakeup = t;

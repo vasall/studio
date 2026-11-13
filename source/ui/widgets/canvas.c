@@ -1,4 +1,4 @@
-#include <ui/canvas.h>
+#include <ui/widgets/canvas.h>
 
 #include <string.h>
 

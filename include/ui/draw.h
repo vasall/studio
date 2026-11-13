@@ -30,6 +30,10 @@ typedef struct UIDrawCallbackInfo {
         s32 y;
         s32 w;
         s32 h;
+        s32 clip_x;             /* Visible part, top left origin; the */
+        s32 clip_y;             /* scissor is set to it */
+        s32 clip_w;
+        s32 clip_h;
         s32 fb_w;               /* Framebuffer size */
         s32 fb_h;
         f32 scale;              /* Framebuffer pixels per logical pixel */

@@ -43,14 +43,24 @@ The same commands are available as VS Code tasks (`studio: build`,
 
 ### Widgets
 
-All widgets are in `include/ui/widgets.h`; *View > Open UI Gallery* (open
-at startup) shows each of them:
+Each widget has its own header in `include/ui/widgets/` and source in
+`source/ui/widgets/`; `include/ui/widgets.h` includes them all.
+*View > Open UI Gallery* (open at startup) shows each of them:
 
 label, icon, button, icon button, tooltip, tab, splitter, scroll area,
 menu / context menu, checkbox, radio button, single-line text field,
 slider, progress bar, dropdown, badge, tree row, virtualized list,
-notifications (toasts) and a canvas for 2D shapes (`include/ui/canvas.h`),
-which can also draw with own GL code for heavy content like live plots.
+notifications (toasts), a canvas for 2D shapes, which can also draw
+with own GL code for heavy content like live plots, and a 3D viewport.
+
+### 3D scenes
+
+`include/render/scene.h` is the interface for 3D content: upload a mesh
+once with `scene_mesh_add` (positions, optional normals and indices), place
+it with `scene_object_add` (transform and color), and move objects with
+`scene_object_set_transform`. `scene_viewport` shows the scene in the UI,
+with its own camera (`include/render/camera.h`, Z-up, millimeters): drag to
+orbit, Shift + drag or middle drag to pan, wheel to zoom.
 
 Tab and Shift+Tab move the keyboard focus between focusable widgets and
 scroll them into view; Esc or a click elsewhere drops it.

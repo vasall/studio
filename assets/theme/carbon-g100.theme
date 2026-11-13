@@ -489,6 +489,12 @@ canvas.border-width           = 1
 canvas.border-color           = $border-subtle-00
 canvas.padding                = 1
 
+viewport.width                = grow
+viewport.height               = 320
+viewport.border-width         = 1
+viewport.border-color         = $border-subtle-00
+viewport.padding              = 1
+
 # --- notifications -----------------------------------------------------------
 
 toasts.gap                    = 8
